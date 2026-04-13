@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SWE Job Tracker
+
+A full-stack job application tracker built for software engineering graduate applicants. Track every application through the hiring pipeline, log performance data, and get AI-powered coaching to improve over time.
+
+**Live demo:** _coming soon_
+
+## Features
+
+- **Pipeline tracking** — Applied → OA → Interview → Offer → Rejected
+- **Performance logging** — OA scores, interview outcomes, DSA topics asked, behavioural questions
+- **Strategy tracking** — application source, resume version, cover letter usage
+- **Reflection system** — log mistakes and improvements after each round
+- **AI Career Coach** — pattern detection and personalised prep advice powered by Claude (coming soon)
+- **Analytics dashboard** — conversion rates and application trends (coming soon)
+- **Cross-device sync** — data persists via Supabase, works on mobile and desktop
+- **Secure auth** — email/password authentication with Row Level Security
+
+## Tech Stack
+
+| Layer      | Technology                           |
+| ---------- | ------------------------------------ |
+| Frontend   | Next.js 14, TypeScript, Tailwind CSS |
+| Database   | Supabase (PostgreSQL)                |
+| Auth       | Supabase Auth                        |
+| AI         | Anthropic Claude API                 |
+| Deployment | Vercel                               |
 
 ## Getting Started
 
-First, run the development server:
+1. Clone the repo
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+   git clone https://github.com/muhibmannan/SWE-Job-Tracker.git
+   cd SWE-Job-Tracker
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+   npm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3. Set up environment variables — create a `.env.local` file:
 
-## Learn More
+```bash
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ANTHROPIC_API_KEY=your_anthropic_api_key
+```
 
-To learn more about Next.js, take a look at the following resources:
+4. Run the development server
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+   npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project Status
 
-## Deploy on Vercel
+Actively in development. Current progress:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- [x] Authentication (login / sign up)
+- [x] Application CRUD (add, edit, delete)
+- [x] Pipeline filter cards
+- [x] Responsive layout (mobile + desktop)
+- [ ] AI Career Coach
+- [ ] Analytics dashboard
+- [ ] Vercel deployment
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Author
+
+Muhib Mannan — Master of Computer Science (Software Engineering), Monash University  
+[GitHub](https://github.com/muhibmannan)
