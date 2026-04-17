@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import Navbar from "@/components/Navbar";
 import PipelineCard from "@/components/PipelineCard";
 import ApplicationModal from "@/components/ApplicationModal";
+import AICoach from "@/components/AICoach";
 
 const STAGES: AppStatus[] = ["Applied", "OA", "Interview", "Offer", "Rejected"];
 const STAGE_COLORS: Record<AppStatus, { text: string; dot: string }> = {
@@ -432,6 +433,7 @@ export default function DashboardClient({
           onSave={handleSave}
         />
       )}
+      <AICoach applications={apps} />
     </div>
   );
 }

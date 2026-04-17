@@ -1,11 +1,8 @@
-import OpenAI from "openai";
+import Groq from "groq-sdk";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-const deepseek = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY,
-  baseURL: "https://api.deepseek.com",
-});
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,7 +33,7 @@ ${i + 1}. ${a.company} — ${a.role}
             )
             .join("\n");
 
-    const systemPrompt = `You are an expert AI Career Coach specialising in software engineering graduate recruitment in Australia. You have deep knowledge of Australian tech companies (Atlassian, Canva, Afterpay, REA Group, Seek, Xero, etc.), graduate SWE hiring pipelines (OA formats, technical interviews, behavioural rounds), LeetCode/DSA patterns commonly tested in grad interviews, and resume/application strategy for competitive grad markets.
+    const systemPrompt = `You are an expert AI Career Coach specialising in software engineering graduate recruitment in Australia. You have deep knowledge of Australian tech companies (Atlassian, Canva, Afterpay, REA Group, Seek, Xero, etc.), graduate SWE hiring pipelines, DSA patterns tested in grad interviews, and resume/application strategy for competitive grad markets.
 
 You are analysing the job application data of a Master of Computer Science (Software Engineering) student at Monash University who is actively applying for graduate roles in Sydney.
 
@@ -45,8 +42,8 @@ ${appSummary}
 
 Be specific, actionable, and encouraging. Reference their actual data when giving advice. Keep responses concise and well-structured using markdown.`;
 
-    const completion = await deepseek.chat.completions.create({
-      model: "deepseek-chat",
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: question },

@@ -85,8 +85,7 @@ export default function AICoach({
                   <span className="font-bold text-white">AI Career Coach</span>
                 </div>
                 <p className="text-xs mt-0.5" style={{ color: "#8b949e" }}>
-                  Powered by DeepSeek · {applications.length} applications
-                  analysed
+                  Powered by Groq · {applications.length} applications analysed
                 </p>
               </div>
               <button
