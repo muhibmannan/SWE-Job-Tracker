@@ -65,7 +65,6 @@ export default function DashboardClient({
   return (
     <div className="min-h-screen" style={{ background: "#010409" }}>
       <Navbar email={user.email ?? ""} />
-
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -426,7 +425,6 @@ export default function DashboardClient({
           </>
         )}
       </main>
-
       {modal !== null && (
         <ApplicationModal
           app={modal}
