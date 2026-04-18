@@ -9,6 +9,7 @@ import Navbar from "@/components/Navbar";
 import PipelineCard from "@/components/PipelineCard";
 import ApplicationModal from "@/components/ApplicationModal";
 import AICoach from "@/components/AICoach";
+import Link from "next/link";
 
 const STAGES: AppStatus[] = ["Applied", "OA", "Interview", "Offer", "Rejected"];
 const STAGE_COLORS: Record<AppStatus, { text: string; dot: string }> = {
@@ -77,15 +78,24 @@ export default function DashboardClient({
               {apps.length} tracked
             </p>
           </div>
-          <button
-            onClick={() => setModal({})}
-            className="px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2"
-            style={{ background: "#238636", color: "#fff" }}
-          >
-            <span className="text-lg leading-none">+</span>
-            <span className="hidden sm:inline">New Application</span>
-            <span className="sm:hidden">Add</span>
-          </button>
+          <div className="flex gap-2 items-center">
+            <Link
+              href="/analytics"
+              className="px-3 py-2 rounded-lg text-sm font-bold border hidden sm:inline-block"
+              style={{ borderColor: "#30363d", color: "#8b949e" }}
+            >
+              Analytics
+            </Link>
+            <button
+              onClick={() => setModal({})}
+              className="px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2"
+              style={{ background: "#238636", color: "#fff" }}
+            >
+              <span className="text-lg leading-none">+</span>
+              <span className="hidden sm:inline">New Application</span>
+              <span className="sm:hidden">Add</span>
+            </button>
+          </div>
         </div>
 
         {/* Pipeline cards */}
