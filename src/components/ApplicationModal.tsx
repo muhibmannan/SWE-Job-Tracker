@@ -220,8 +220,8 @@ export default function ApplicationModal({ app, onClose, onSave }: Props) {
               <Label>date applied</Label>
               <input
                 type="date"
-                className={inputClasses}
-                style={inputStyle}
+                className="w-full mono px-3 rounded-lg outline-none border transition-colors focus:border-[var(--accent)]"
+                style={{ ...inputStyle, fontSize: "16px", minHeight: "44px" }}
                 value={form.date_applied ?? ""}
                 onChange={(e) => set("date_applied", e.target.value)}
               />
@@ -230,8 +230,8 @@ export default function ApplicationModal({ app, onClose, onSave }: Props) {
               <Label>deadline</Label>
               <input
                 type="date"
-                className={inputClasses}
-                style={inputStyle}
+                className="w-full mono px-3 rounded-lg outline-none border transition-colors focus:border-[var(--accent)]"
+                style={{ ...inputStyle, fontSize: "16px", minHeight: "44px" }}
                 value={form.deadline ?? ""}
                 onChange={(e) => set("deadline", e.target.value)}
               />
