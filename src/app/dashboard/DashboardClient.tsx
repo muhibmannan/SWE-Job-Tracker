@@ -1,7 +1,6 @@
 "use client";
 
-import React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { Application, AppStatus, NewApplication } from "@/lib/types";
 import { createClient } from "@/lib/supabase/client";
@@ -9,23 +8,24 @@ import Navbar from "@/components/Navbar";
 import PipelineCard from "@/components/PipelineCard";
 import ApplicationModal from "@/components/ApplicationModal";
 import AICoach from "@/components/AICoach";
-import Link from "next/link";
 
 const STAGES: AppStatus[] = ["Applied", "OA", "Interview", "Offer", "Rejected"];
-const STAGE_COLORS: Record<AppStatus, { text: string; dot: string }> = {
-  Applied: { text: "#60a5fa", dot: "#3b82f6" },
-  OA: { text: "#fbbf24", dot: "#f59e0b" },
-  Interview: { text: "#4ade80", dot: "#22c55e" },
-  Offer: { text: "#a78bfa", dot: "#8b5cf6" },
-  Rejected: { text: "#f87171", dot: "#ef4444" },
+const STAGE_COLORS: Record<AppStatus, string> = {
+  Applied: "var(--blue)",
+  OA: "var(--amber)",
+  Interview: "var(--green)",
+  Offer: "var(--purple)",
+  Rejected: "var(--red)",
 };
 
 export default function DashboardClient({
   user,
   initialApps,
+  firstName,
 }: {
   user: User;
   initialApps: Application[];
+  firstName: string | null;
 }) {
   const [apps, setApps] = useState<Application[]>(initialApps);
   const [filter, setFilter] = useState<AppStatus | "All">("All");
@@ -36,6 +36,25 @@ export default function DashboardClient({
   const filtered =
     filter === "All" ? apps : apps.filter((a) => a.status === filter);
   const count = (s: AppStatus) => apps.filter((a) => a.status === s).length;
+  const total = apps.length;
+  const waiting = apps.filter((a) =>
+    ["Applied", "OA", "Interview"].includes(a.status),
+  ).length;
+  const responseRate =
+    total > 0
+      ? Math.round(
+          (apps.filter((a) => ["OA", "Interview", "Offer"].includes(a.status))
+            .length /
+            total) *
+            100,
+        )
+      : 0;
+  const offerRate =
+    total > 0
+      ? Math.round(
+          (apps.filter((a) => a.status === "Offer").length / total) * 100,
+        )
+      : 0;
 
   const handleSave = async (data: NewApplication) => {
     if (modal?.id) {
@@ -65,377 +84,323 @@ export default function DashboardClient({
   };
 
   return (
-    <div className="min-h-screen" style={{ background: "#010409" }}>
-      <Navbar email={user.email ?? ""} />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen" style={{ background: "var(--bg)" }}>
+      <Navbar email={user.email ?? ""} firstName={firstName} />
+
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+        {/* Hero stats */}
+        <div
+          className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 pb-8 mb-8"
+          style={{ borderBottom: "0.5px solid var(--border)" }}
+        >
           <div>
-            <h1 className="text-white font-bold text-xl sm:text-2xl">
-              Applications
+            <h1
+              className="text-5xl sm:text-6xl font-medium tracking-tight leading-none"
+              style={{ color: "var(--text)" }}
+            >
+              {total}
+              <span
+                className="text-3xl sm:text-4xl ml-1"
+                style={{ color: "var(--text-dim)" }}
+              >
+                /apps
+              </span>
             </h1>
-            <p className="text-sm mt-0.5" style={{ color: "#8b949e" }}>
-              {apps.length} tracked
+            <p
+              className="mono text-sm mt-3"
+              style={{ color: "var(--text-dim)" }}
+            >
+              // {waiting} awaiting response
             </p>
           </div>
-          <div className="flex gap-2 items-center">
-            <Link
-              href="/analytics"
-              className="px-3 py-2 rounded-lg text-sm font-bold border hidden sm:inline-block"
-              style={{ borderColor: "#30363d", color: "#8b949e" }}
-            >
-              Analytics
-            </Link>
-            <button
-              onClick={() => setModal({})}
-              className="px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2"
-              style={{ background: "#238636", color: "#fff" }}
-            >
-              <span className="text-lg leading-none">+</span>
-              <span className="hidden sm:inline">New Application</span>
-              <span className="sm:hidden">Add</span>
-            </button>
+          <div className="flex gap-8 sm:gap-10">
+            <div>
+              <div
+                className="mono text-xs uppercase tracking-widest"
+                style={{ color: "var(--text-dim)" }}
+              >
+                response
+              </div>
+              <div
+                className="mono text-2xl font-medium mt-2"
+                style={{ color: "var(--text)" }}
+              >
+                {responseRate}
+                <span
+                  className="text-sm ml-1"
+                  style={{ color: "var(--accent)" }}
+                >
+                  %
+                </span>
+              </div>
+            </div>
+            <div>
+              <div
+                className="mono text-xs uppercase tracking-widest"
+                style={{ color: "var(--text-dim)" }}
+              >
+                offers
+              </div>
+              <div
+                className="mono text-2xl font-medium mt-2"
+                style={{ color: "var(--text)" }}
+              >
+                {offerRate}
+                <span
+                  className="text-sm ml-1"
+                  style={{ color: "var(--accent)" }}
+                >
+                  %
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Pipeline cards */}
-        <div className="flex gap-2 sm:gap-3 mb-6 overflow-x-auto pb-1">
+        {/* Pipeline */}
+        <div
+          className="flex rounded-lg overflow-hidden mb-8 overflow-x-auto"
+          style={{ border: "0.5px solid var(--border)" }}
+        >
           <PipelineCard
             stage="All"
-            count={apps.length}
+            count={total}
             active={filter === "All"}
             onClick={() => setFilter("All")}
+            isFirst
           />
-          {STAGES.map((s) => (
+          {STAGES.map((s, i) => (
             <PipelineCard
               key={s}
               stage={s}
               count={count(s)}
               active={filter === s}
               onClick={() => setFilter(s)}
+              isLast={i === STAGES.length - 1}
             />
           ))}
         </div>
 
-        {/* Table / Cards */}
+        {/* Section header */}
+        <div className="flex items-center justify-between mb-5">
+          <p
+            className="mono text-sm uppercase tracking-widest"
+            style={{ color: "var(--text-dim)" }}
+          >
+            //{" "}
+            {filter === "All"
+              ? "all applications"
+              : `${filter.toLowerCase()} stage`}
+          </p>
+          <button
+            onClick={() => setModal({})}
+            className="mono text-sm px-4 py-2 rounded transition-colors hover:opacity-70"
+            style={{
+              border: "0.5px solid var(--border-strong)",
+              color: "var(--text)",
+            }}
+          >
+            + new
+          </button>
+        </div>
+
+        {/* Applications */}
         {filtered.length === 0 ? (
-          <div className="text-center py-20" style={{ color: "#8b949e" }}>
-            <p className="text-4xl mb-3">📋</p>
-            <p className="font-medium">
+          <div className="text-center py-24">
+            <p className="mono text-base" style={{ color: "var(--text-dim)" }}>
               {apps.length === 0
-                ? "No applications yet — hit '+ New Application'"
-                : "No applications match this filter"}
+                ? '// no applications yet → hit "+ new" to start'
+                : "// no matches in this stage"}
             </p>
           </div>
         ) : (
-          <>
-            {/* Desktop table */}
-            <div
-              className="hidden sm:block rounded-xl border overflow-hidden"
-              style={{ borderColor: "#21262d", background: "#0d1117" }}
-            >
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr style={{ background: "#161b22" }}>
-                    {[
-                      "Company",
-                      "Role",
-                      "Status",
-                      "Applied",
-                      "Source",
-                      "CV",
-                      "CL",
-                      "",
-                    ].map((h) => (
-                      <th
-                        key={h}
-                        className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider"
-                        style={{
-                          color: "#8b949e",
-                          borderBottom: "1px solid #21262d",
-                        }}
-                      >
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((app) => {
-                    const c = STAGE_COLORS[app.status];
-                    const isExp = expanded === app.id;
-                    return (
-                      <React.Fragment key={app.id}>
-                        <tr
-                          key={app.id}
-                          className="cursor-pointer transition-colors hover:bg-opacity-50"
-                          style={{
-                            background: isExp ? "#161b22" : "transparent",
-                            borderBottom: "1px solid #161b22",
-                          }}
-                          onClick={() => setExpanded(isExp ? null : app.id)}
-                        >
-                          <td
-                            className="px-4 py-3 font-bold text-sm"
-                            style={{ color: "#f0f6fc" }}
-                          >
-                            {app.company}
-                          </td>
-                          <td
-                            className="px-4 py-3 text-sm font-mono"
-                            style={{ color: "#e6edf3" }}
-                          >
-                            {app.role}
-                          </td>
-                          <td className="px-4 py-3">
-                            <span
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold"
-                              style={{
-                                background: `${c.dot}22`,
-                                color: c.text,
-                              }}
-                            >
-                              <span
-                                className="w-1.5 h-1.5 rounded-full"
-                                style={{ background: c.dot }}
-                              />
-                              {app.status}
-                            </span>
-                          </td>
-                          <td
-                            className="px-4 py-3 text-xs font-mono"
-                            style={{ color: "#8b949e" }}
-                          >
-                            {app.date_applied ?? "—"}
-                          </td>
-                          <td
-                            className="px-4 py-3 text-xs"
-                            style={{ color: "#8b949e" }}
-                          >
-                            {app.source ?? "—"}
-                          </td>
-                          <td
-                            className="px-4 py-3 text-xs font-mono"
-                            style={{ color: "#8b949e" }}
-                          >
-                            {app.resume_version ?? "—"}
-                          </td>
-                          <td
-                            className="px-4 py-3 text-xs font-bold"
-                            style={{
-                              color: app.cover_letter ? "#4ade80" : "#8b949e",
-                            }}
-                          >
-                            {app.cover_letter ? "Y" : "N"}
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex gap-2">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setModal(app);
-                                }}
-                                className="text-xs px-2.5 py-1 rounded-lg border"
-                                style={{
-                                  borderColor: "#30363d",
-                                  color: "#8b949e",
-                                }}
-                              >
-                                Edit
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDelete(app.id);
-                                }}
-                                className="text-xs px-2.5 py-1 rounded-lg border"
-                                style={{
-                                  borderColor: "#30363d",
-                                  color: "#f87171",
-                                }}
-                              >
-                                Del
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                        {isExp && (
-                          <tr
-                            key={`exp-${app.id}`}
-                            style={{ background: "#161b22" }}
-                          >
-                            <td colSpan={8} className="px-4 pb-4 pt-1">
-                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-3">
-                                {[
-                                  ["OA Score", app.oa_score],
-                                  ["Interview Outcome", app.interview_outcome],
-                                  ["DSA Topics", app.dsa_topics],
-                                  ["Behavioural Qs", app.behavioural_questions],
-                                ]
-                                  .filter(([, v]) => v)
-                                  .map(([k, v]) => (
-                                    <div key={k as string}>
-                                      <p
-                                        className="text-xs uppercase tracking-wider mb-1"
-                                        style={{ color: "#8b949e" }}
-                                      >
-                                        {k}
-                                      </p>
-                                      <p
-                                        className="text-xs font-mono"
-                                        style={{ color: "#e6edf3" }}
-                                      >
-                                        {v}
-                                      </p>
-                                    </div>
-                                  ))}
-                              </div>
-                              {(app.mistakes || app.improvements) && (
-                                <div
-                                  className="grid grid-cols-2 gap-4 pt-3 border-t"
-                                  style={{ borderColor: "#21262d" }}
-                                >
-                                  {app.mistakes && (
-                                    <div>
-                                      <p
-                                        className="text-xs uppercase tracking-wider mb-1"
-                                        style={{ color: "#f87171" }}
-                                      >
-                                        ⚠ Mistakes
-                                      </p>
-                                      <p
-                                        className="text-xs"
-                                        style={{ color: "#e6edf3" }}
-                                      >
-                                        {app.mistakes}
-                                      </p>
-                                    </div>
-                                  )}
-                                  {app.improvements && (
-                                    <div>
-                                      <p
-                                        className="text-xs uppercase tracking-wider mb-1"
-                                        style={{ color: "#4ade80" }}
-                                      >
-                                        ↑ Improve
-                                      </p>
-                                      <p
-                                        className="text-xs"
-                                        style={{ color: "#e6edf3" }}
-                                      >
-                                        {app.improvements}
-                                      </p>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </td>
-                          </tr>
-                        )}
-                      </React.Fragment>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile cards */}
-            <div className="sm:hidden space-y-3">
-              {filtered.map((app) => {
-                const c = STAGE_COLORS[app.status];
-                const isExp = expanded === app.id;
-                return (
+          <div className="flex flex-col gap-1">
+            {filtered.map((app) => {
+              const isExp = expanded === app.id;
+              return (
+                <React.Fragment key={app.id}>
                   <div
-                    key={app.id}
-                    className="rounded-xl border p-4"
-                    style={{ background: "#0d1117", borderColor: "#21262d" }}
+                    className="grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_auto_auto_auto] gap-4 sm:gap-6 items-center py-4 px-4 sm:px-5 rounded-lg cursor-pointer transition-colors"
+                    style={{
+                      background: isExp ? "var(--bg-hover)" : "transparent",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isExp)
+                        e.currentTarget.style.background = "var(--bg-hover)";
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isExp)
+                        e.currentTarget.style.background = "transparent";
+                    }}
                     onClick={() => setExpanded(isExp ? null : app.id)}
                   >
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <p className="font-bold text-white">{app.company}</p>
-                        <p className="text-sm" style={{ color: "#8b949e" }}>
-                          {app.role}
-                        </p>
-                      </div>
-                      <span
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-bold"
-                        style={{ background: `${c.dot}22`, color: c.text }}
+                    <div className="min-w-0">
+                      <div
+                        className="text-base font-medium truncate"
+                        style={{ color: "var(--text)" }}
                       >
-                        <span
-                          className="w-1.5 h-1.5 rounded-full"
-                          style={{ background: c.dot }}
-                        />
-                        {app.status}
-                      </span>
+                        {app.company}
+                      </div>
+                      <div
+                        className="mono text-sm mt-1 truncate"
+                        style={{ color: "var(--text-dim)" }}
+                      >
+                        {app.role.toLowerCase().replace(/ /g, "-")}
+                        {app.source && ` → ${app.source.toLowerCase()}`}
+                      </div>
                     </div>
                     <div
-                      className="flex gap-3 text-xs mb-3"
-                      style={{ color: "#8b949e" }}
+                      className="mono text-sm hidden sm:block"
+                      style={{ color: "var(--text-dim)" }}
                     >
-                      <span>{app.date_applied ?? "—"}</span>
-                      <span>{app.source ?? "—"}</span>
-                      <span>CV: {app.resume_version ?? "—"}</span>
-                      <span
-                        style={{
-                          color: app.cover_letter ? "#4ade80" : "#8b949e",
-                        }}
-                      >
-                        CL: {app.cover_letter ? "Y" : "N"}
-                      </span>
+                      {app.date_applied ?? "—"}
                     </div>
-                    {isExp &&
-                      (app.mistakes || app.improvements || app.dsa_topics) && (
-                        <div
-                          className="border-t pt-3 mb-3 space-y-2"
-                          style={{ borderColor: "#21262d" }}
-                        >
-                          {app.dsa_topics && (
-                            <p className="text-xs" style={{ color: "#fbbf24" }}>
-                              DSA: {app.dsa_topics}
-                            </p>
-                          )}
-                          {app.mistakes && (
-                            <p className="text-xs" style={{ color: "#f87171" }}>
-                              ⚠ {app.mistakes}
-                            </p>
-                          )}
-                          {app.improvements && (
-                            <p className="text-xs" style={{ color: "#4ade80" }}>
-                              ↑ {app.improvements}
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    <div className="flex gap-2">
+                    <span
+                      className="inline-flex items-center gap-1.5 mono text-xs uppercase tracking-wider px-2.5 py-1.5 rounded"
+                      style={{
+                        border: `0.5px solid ${STAGE_COLORS[app.status]}40`,
+                        background: `${STAGE_COLORS[app.status]}0D`,
+                        color: STAGE_COLORS[app.status],
+                      }}
+                    >
+                      <span
+                        className="w-1.5 h-1.5 rounded-full"
+                        style={{ background: STAGE_COLORS[app.status] }}
+                      />
+                      {app.status.toLowerCase()}
+                    </span>
+                    <div className="hidden sm:flex gap-3">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setModal(app);
                         }}
-                        className="flex-1 py-1.5 rounded-lg text-xs font-bold border"
-                        style={{ borderColor: "#30363d", color: "#8b949e" }}
+                        className="mono text-xs px-2 py-1 transition-opacity hover:opacity-60"
+                        style={{ color: "var(--text-dim)" }}
                       >
-                        Edit
+                        edit
                       </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDelete(app.id);
                         }}
-                        className="flex-1 py-1.5 rounded-lg text-xs font-bold border"
-                        style={{ borderColor: "#30363d", color: "#f87171" }}
+                        className="mono text-xs px-2 py-1 transition-opacity hover:opacity-60"
+                        style={{ color: "var(--red)" }}
                       >
-                        Delete
+                        del
                       </button>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </>
+                  {isExp && (
+                    <div
+                      className="px-4 sm:px-5 pb-4 pt-1 mb-2 rounded-b-lg"
+                      style={{ background: "var(--bg-hover)" }}
+                    >
+                      <div
+                        className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-4 pt-3"
+                        style={{ borderTop: "0.5px solid var(--border)" }}
+                      >
+                        {[
+                          ["oa_score", app.oa_score],
+                          ["interview", app.interview_outcome],
+                          ["dsa", app.dsa_topics],
+                          ["behavioural", app.behavioural_questions],
+                        ]
+                          .filter(([, v]) => v)
+                          .map(([k, v]) => (
+                            <div key={k as string}>
+                              <div
+                                className="mono text-xs uppercase tracking-widest mb-1.5"
+                                style={{ color: "var(--text-dim)" }}
+                              >
+                                {k}
+                              </div>
+                              <div
+                                className="mono text-sm"
+                                style={{ color: "var(--text)" }}
+                              >
+                                {v}
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                      {(app.mistakes || app.improvements) && (
+                        <div
+                          className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-4"
+                          style={{ borderTop: "0.5px solid var(--border)" }}
+                        >
+                          {app.mistakes && (
+                            <div>
+                              <div
+                                className="mono text-xs uppercase tracking-widest mb-1.5"
+                                style={{ color: "var(--red)" }}
+                              >
+                                mistakes
+                              </div>
+                              <div
+                                className="text-sm"
+                                style={{ color: "var(--text)" }}
+                              >
+                                {app.mistakes}
+                              </div>
+                            </div>
+                          )}
+                          {app.improvements && (
+                            <div>
+                              <div
+                                className="mono text-xs uppercase tracking-widest mb-1.5"
+                                style={{ color: "var(--accent)" }}
+                              >
+                                improve
+                              </div>
+                              <div
+                                className="text-sm"
+                                style={{ color: "var(--text)" }}
+                              >
+                                {app.improvements}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      <div className="flex gap-2 mt-4 sm:hidden">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setModal(app);
+                          }}
+                          className="flex-1 mono text-sm py-2.5 rounded"
+                          style={{
+                            border: "0.5px solid var(--border-strong)",
+                            color: "var(--text)",
+                          }}
+                        >
+                          edit
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(app.id);
+                          }}
+                          className="flex-1 mono text-sm py-2.5 rounded"
+                          style={{
+                            border: "0.5px solid var(--border-strong)",
+                            color: "var(--red)",
+                          }}
+                        >
+                          delete
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </div>
         )}
       </main>
+
       {modal !== null && (
         <ApplicationModal
           app={modal}

@@ -1,10 +1,19 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
+import ThemeToggle from "./ThemeToggle";
 
-export default function Navbar({ email }: { email: string }) {
+export default function Navbar({
+  email,
+  firstName,
+}: {
+  email: string;
+  firstName?: string | null;
+}) {
   const router = useRouter();
+  const pathname = usePathname();
   const supabase = createClient();
 
   const signOut = async () => {
@@ -12,30 +21,59 @@ export default function Navbar({ email }: { email: string }) {
     router.push("/auth");
   };
 
+  const nav = [
+    { href: "/dashboard", label: "~/pipeline" },
+    { href: "/analytics", label: "~/analytics" },
+  ];
+
   return (
     <header
-      className="border-b px-4 sm:px-6 py-3 flex items-center justify-between"
-      style={{ borderColor: "#21262d", background: "#0d1117" }}
+      className="px-4 sm:px-6 py-5 flex items-center justify-between border-b"
+      style={{ borderColor: "var(--border)" }}
     >
-      <div className="flex items-center gap-2">
+      <Link href="/dashboard" className="flex items-center gap-3">
         <div
-          className="w-2 h-2 rounded-full bg-green-400"
-          style={{ boxShadow: "0 0 8px #4ade80" }}
+          className="w-3 h-3"
+          style={{ background: "var(--accent)", borderRadius: 3 }}
         />
-        <span className="font-bold text-white text-sm sm:text-base tracking-tight">
-          SWE Job Tracker
+        <span
+          className="mono text-xl font-medium"
+          style={{ color: "var(--text)" }}
+        >
+          {firstName ? firstName.toLowerCase() : "jobtracker"}
+          <span style={{ color: "var(--accent)" }}>.sh</span>
         </span>
-      </div>
-      <div className="flex items-center gap-3">
-        <span className="text-xs hidden sm:block" style={{ color: "#8b949e" }}>
-          {email}
-        </span>
+      </Link>
+
+      <nav className="hidden sm:flex items-center gap-7">
+        {nav.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className="mono text-sm transition-colors hover:opacity-70"
+            style={{
+              color: pathname === item.href ? "var(--text)" : "var(--text-dim)",
+            }}
+          >
+            {item.label}
+          </Link>
+        ))}
+      </nav>
+
+      <div className="flex items-center gap-3 sm:gap-4">
+        <ThemeToggle />
+        <div
+          className="w-[0.5px] h-4 hidden sm:block"
+          style={{ background: "var(--border)" }}
+        />
         <button
           onClick={signOut}
-          className="text-xs px-3 py-1.5 rounded-lg border transition-colors"
-          style={{ borderColor: "#30363d", color: "#8b949e" }}
+          className="mono text-sm flex items-center gap-1.5 transition-opacity hover:opacity-70"
+          style={{ color: "var(--text-dim)" }}
+          title="Sign out"
         >
-          Sign out
+          <span>$</span>
+          <span>logout</span>
         </button>
       </div>
     </header>

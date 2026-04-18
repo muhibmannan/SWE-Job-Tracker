@@ -2,12 +2,13 @@
 
 import { AppStatus } from "@/lib/types";
 
-const COLORS: Record<AppStatus, { bg: string; text: string; dot: string }> = {
-  Applied: { bg: "#1e3a5f", text: "#60a5fa", dot: "#3b82f6" },
-  OA: { bg: "#3b2a00", text: "#fbbf24", dot: "#f59e0b" },
-  Interview: { bg: "#1a2e1a", text: "#4ade80", dot: "#22c55e" },
-  Offer: { bg: "#1f1060", text: "#a78bfa", dot: "#8b5cf6" },
-  Rejected: { bg: "#2d1515", text: "#f87171", dot: "#ef4444" },
+const COLORS: Record<AppStatus | "All", string> = {
+  All: "var(--text)",
+  Applied: "var(--blue)",
+  OA: "var(--amber)",
+  Interview: "var(--green)",
+  Offer: "var(--purple)",
+  Rejected: "var(--red)",
 };
 
 interface Props {
@@ -15,32 +16,44 @@ interface Props {
   count: number;
   active: boolean;
   onClick: () => void;
+  isFirst?: boolean;
+  isLast?: boolean;
 }
 
-export default function PipelineCard({ stage, count, active, onClick }: Props) {
-  const c = stage === "All" ? null : COLORS[stage];
+export default function PipelineCard({
+  stage,
+  count,
+  active,
+  onClick,
+  isLast,
+}: Props) {
   return (
     <button
       onClick={onClick}
-      className="flex-1 min-w-[80px] rounded-xl p-3 sm:p-4 text-left transition-all border"
+      className="flex-1 min-w-0 py-4 px-4 sm:px-5 relative transition-colors text-center sm:text-left"
       style={{
-        background: active ? (c?.bg ?? "#1c2128") : "#0d1117",
-        borderColor: active ? (c?.dot ?? "#8b949e") : "#21262d",
-        boxShadow: active ? `0 0 12px ${c?.dot ?? "#8b949e"}33` : "none",
+        background: active ? "var(--accent-bg)" : "transparent",
+        borderRight: isLast ? "none" : "0.5px solid var(--border)",
       }}
     >
       <div
-        className="font-bold text-xl sm:text-2xl font-mono"
-        style={{ color: c?.text ?? "#f0f6fc" }}
+        className="mono text-xl sm:text-2xl font-medium"
+        style={{ color: active ? "var(--accent)" : COLORS[stage] }}
       >
         {count}
       </div>
       <div
-        className="text-xs font-bold uppercase tracking-widest mt-1"
-        style={{ color: "#8b949e" }}
+        className="mono text-xs uppercase tracking-widest mt-1.5"
+        style={{ color: "var(--text-dim)" }}
       >
-        {stage}
+        {stage.toLowerCase()}
       </div>
+      {active && (
+        <div
+          className="absolute bottom-0 left-0 right-0 h-[2px]"
+          style={{ background: "var(--accent)" }}
+        />
+      )}
     </button>
   );
 }
