@@ -30,7 +30,7 @@ export default function PipelineCard({
   return (
     <button
       onClick={onClick}
-      className="shrink-0 min-w-[90px] sm:flex-1 sm:min-w-0 py-4 px-4 sm:px-5 relative transition-colors text-center sm:text-left"
+      className="shrink-0 min-w-[120px] sm:flex-1 sm:min-w-0 py-4 px-4 sm:px-5 relative transition-colors text-center sm:text-left"
       style={{
         background: active ? "var(--accent-bg)" : "transparent",
         borderRight: isLast ? "none" : "0.5px solid var(--border)",
