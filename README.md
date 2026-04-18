@@ -2,7 +2,7 @@
 
 A full-stack job application tracker built for software engineering graduate applicants. Track every application through the hiring pipeline, log performance data, and get AI-powered coaching to improve over time.
 
-**Live demo:** _coming soon_
+**Live demo:** [swe-job-tracker.vercel.app](https://swe-job-tracker.vercel.app)
 
 ## Features
 
@@ -62,9 +62,9 @@ Actively in development. Current progress:
 - [x] Application CRUD (add, edit, delete)
 - [x] Pipeline filter cards
 - [x] Responsive layout (mobile + desktop)
-- [ ] AI Career Coach
-- [ ] Analytics dashboard
-- [ ] Vercel deployment
+- [x] AI Career Coach
+- [x] Analytics dashboard
+- [x] Vercel deployment
 
 ## Author
 
