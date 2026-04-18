@@ -4,6 +4,7 @@ import { User } from "@supabase/supabase-js";
 import { Application } from "@/lib/types";
 import Navbar from "@/components/Navbar";
 import Link from "next/link";
+import MobileNav from "@/components/MobileNav";
 import {
   BarChart,
   Bar,
@@ -139,7 +140,7 @@ export default function AnalyticsClient({
     <div className="min-h-screen" style={{ background: "#010409" }}>
       <Navbar email={user.email ?? ""} />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-28 sm:pb-6">
         {/* Header with tabs */}
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -329,6 +330,7 @@ export default function AnalyticsClient({
           </>
         )}
       </main>
+      <MobileNav />
     </div>
   );
 }

@@ -121,11 +121,12 @@ export default function ApplicationModal({ app, onClose, onSave }: Props) {
       onClick={onClose}
     >
       <div
-        className="w-full sm:max-w-2xl rounded-t-2xl sm:rounded-xl overflow-hidden flex flex-col"
+        className="w-full sm:max-w-2xl rounded-t-2xl sm:rounded-xl overflow-hidden flex flex-col sm:h-auto"
         style={{
           background: "var(--bg-elev)",
           border: "0.5px solid var(--border)",
-          maxHeight: "94vh",
+          maxHeight: "92dvh",
+          height: "92dvh",
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -146,7 +147,7 @@ export default function ApplicationModal({ app, onClose, onSave }: Props) {
           }}
         >
           <div className="flex items-center gap-2">
-            <div className="flex gap-1.5">
+            <div className="hidden sm:flex gap-1.5">
               <button
                 type="button"
                 onClick={onClose}
@@ -164,19 +165,22 @@ export default function ApplicationModal({ app, onClose, onSave }: Props) {
               />
             </div>
             <span
-              className="mono text-xs ml-2"
+              className="mono text-xs sm:ml-2"
               style={{ color: "var(--text-dim)" }}
             >
-              {app?.id ? "edit-application.sh" : "new-application.sh"} — zsh
+              {app?.id ? "edit-application.sh" : "new-application.sh"}
+              <span className="hidden sm:inline"> — zsh</span>
             </span>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="mono text-xs transition-opacity hover:opacity-70"
-            style={{ color: "var(--text-dim)" }}
+            className="mono text-sm sm:text-xs w-10 h-10 sm:w-auto sm:h-auto flex items-center justify-center rounded-lg sm:rounded-none transition-opacity hover:opacity-70 -mr-2 sm:mr-0"
+            style={{ color: "var(--text)", background: "transparent" }}
+            aria-label="Close"
           >
-            esc
+            <span className="sm:hidden text-xl">✕</span>
+            <span className="hidden sm:inline">esc</span>
           </button>
         </div>
 
@@ -393,7 +397,7 @@ export default function ApplicationModal({ app, onClose, onSave }: Props) {
 
         {/* Footer */}
         <div
-          className="flex gap-3 px-5 sm:px-6 py-4"
+          className="flex gap-3 px-4 sm:px-6 py-3 sm:py-4"
           style={{
             borderTop: "0.5px solid var(--border)",
             background: "var(--bg)",
@@ -402,7 +406,7 @@ export default function ApplicationModal({ app, onClose, onSave }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 sm:flex-none mono text-sm px-4 py-2.5 rounded-lg transition-colors hover:opacity-70"
+            className="flex-1 sm:flex-none mono text-sm px-4 py-3 sm:py-2.5 rounded-lg transition-colors hover:opacity-70"
             style={{
               border: "0.5px solid var(--border-strong)",
               color: "var(--text-dim)",
@@ -414,7 +418,7 @@ export default function ApplicationModal({ app, onClose, onSave }: Props) {
             type="button"
             onClick={handleSave}
             disabled={saving || !form.company || !form.role}
-            className="flex-1 mono text-sm font-medium py-2.5 rounded-lg transition-all hover:opacity-90 active:scale-[0.98]"
+            className="flex-1 mono text-sm font-medium py-3 sm:py-2.5 rounded-lg transition-all hover:opacity-90 active:scale-[0.98]"
             style={{
               background: "var(--accent)",
               color: "#0A0A0A",

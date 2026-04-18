@@ -1,12 +1,25 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Inter, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const mono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-mono",
+});
 
 export const metadata: Metadata = {
-  title: "SWE Job Tracker",
-  description: "Track your software engineering graduate applications",
+  title: "jobtracker.sh",
+  description:
+    "A devtool-style tracker for software engineering graduate applications",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
@@ -15,8 +28,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className} suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+          try {
+            const t = localStorage.getItem('theme') || 'dark';
+            document.documentElement.dataset.theme = t;
+          } catch(e) {}
+        `,
+          }}
+        />
+      </head>
+      <body className={`${inter.variable} ${mono.variable} overflow-x-hidden`}>
         {children}
       </body>
     </html>

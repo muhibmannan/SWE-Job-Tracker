@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import PipelineCard from "@/components/PipelineCard";
 import ApplicationModal from "@/components/ApplicationModal";
 import AICoach from "@/components/AICoach";
+import MobileNav from "@/components/MobileNav";
 
 function ExpandableItem({
   label,
@@ -84,13 +85,23 @@ function ExpandableItem({
           {question.trim() && (
             <div>
               <span style={{ color: "var(--text-dim)" }}>{qPrefix}: </span>
-              <span style={{ color: "var(--text)" }}>{question}</span>
+              <span
+                className="break-words whitespace-pre-wrap"
+                style={{ color: "var(--text)" }}
+              >
+                {question}
+              </span>
             </div>
           )}
           {answer.trim() && (
             <div>
               <span style={{ color: "var(--accent)" }}>{aPrefix}: </span>
-              <span style={{ color: "var(--text)" }}>{answer}</span>
+              <span
+                className="break-words whitespace-pre-wrap"
+                style={{ color: "var(--text)" }}
+              >
+                {answer}
+              </span>
             </div>
           )}
           {!question.trim() && !answer.trim() && (
@@ -183,17 +194,17 @@ export default function DashboardClient({
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
         {/* Hero stats */}
         <div
-          className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 pb-8 mb-8"
+          className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5 sm:gap-6 pb-6 sm:pb-8 mb-6 sm:mb-8"
           style={{ borderBottom: "0.5px solid var(--border)" }}
         >
           <div>
             <h1
-              className="text-5xl sm:text-6xl font-medium tracking-tight leading-none"
+              className="text-6xl sm:text-6xl font-medium tracking-tight leading-none"
               style={{ color: "var(--text)" }}
             >
               {total}
               <span
-                className="text-3xl sm:text-4xl ml-1"
+                className="text-4xl sm:text-4xl ml-1"
                 style={{ color: "var(--text-dim)" }}
               >
                 /apps
@@ -206,8 +217,16 @@ export default function DashboardClient({
               // {waiting} awaiting response
             </p>
           </div>
-          <div className="flex gap-8 sm:gap-10">
-            <div>
+
+          {/* Stats — grid on mobile, row on desktop */}
+          <div
+            className="grid grid-cols-2 sm:flex gap-4 sm:gap-10 pt-3 sm:pt-0"
+            style={{ borderTop: "0.5px solid var(--border)" }}
+          >
+            <div
+              className="sm:border-none pt-3 sm:pt-0"
+              style={{ borderTop: "none" }}
+            >
               <div
                 className="mono text-xs uppercase tracking-widest"
                 style={{ color: "var(--text-dim)" }}
@@ -215,7 +234,7 @@ export default function DashboardClient({
                 response
               </div>
               <div
-                className="mono text-2xl font-medium mt-2"
+                className="mono text-2xl sm:text-2xl font-medium mt-1.5 sm:mt-2"
                 style={{ color: "var(--text)" }}
               >
                 {responseRate}
@@ -227,7 +246,7 @@ export default function DashboardClient({
                 </span>
               </div>
             </div>
-            <div>
+            <div className="pt-3 sm:pt-0">
               <div
                 className="mono text-xs uppercase tracking-widest"
                 style={{ color: "var(--text-dim)" }}
@@ -235,7 +254,7 @@ export default function DashboardClient({
                 offers
               </div>
               <div
-                className="mono text-2xl font-medium mt-2"
+                className="mono text-2xl sm:text-2xl font-medium mt-1.5 sm:mt-2"
                 style={{ color: "var(--text)" }}
               >
                 {offerRate}
@@ -252,8 +271,11 @@ export default function DashboardClient({
 
         {/* Pipeline */}
         <div
-          className="flex rounded-lg overflow-hidden mb-8 overflow-x-auto"
-          style={{ border: "0.5px solid var(--border)" }}
+          className="flex rounded-lg overflow-hidden mb-8 overflow-x-auto scrollbar-none"
+          style={{
+            border: "0.5px solid var(--border)",
+            WebkitOverflowScrolling: "touch",
+          }}
         >
           <PipelineCard
             stage="All"
@@ -569,6 +591,7 @@ export default function DashboardClient({
         />
       )}
       <AICoach applications={apps} />
+      <MobileNav />
     </div>
   );
 }
