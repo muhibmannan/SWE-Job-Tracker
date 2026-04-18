@@ -9,6 +9,99 @@ import PipelineCard from "@/components/PipelineCard";
 import ApplicationModal from "@/components/ApplicationModal";
 import AICoach from "@/components/AICoach";
 
+function ExpandableItem({
+  label,
+  question,
+  answer,
+  labelColor,
+  qPrefix,
+  aPrefix,
+}: {
+  label: string;
+  question: string;
+  answer: string;
+  labelColor: string;
+  qPrefix: string;
+  aPrefix: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const preview = question.trim()
+    ? question.length > 90
+      ? question.slice(0, 90) + "..."
+      : question
+    : "no question recorded";
+
+  return (
+    <div
+      className="rounded-lg overflow-hidden"
+      style={{ background: "var(--bg)", border: "0.5px solid var(--border)" }}
+    >
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen(!open);
+        }}
+        className="w-full flex items-center gap-3 px-3 py-2 text-left transition-colors"
+        style={{ background: open ? "var(--bg-hover)" : "transparent" }}
+      >
+        <span
+          className="mono text-xs font-medium px-2 py-0.5 rounded shrink-0"
+          style={{
+            background: `${labelColor}15`,
+            color: labelColor,
+            border: `0.5px solid ${labelColor}40`,
+          }}
+        >
+          {label}
+        </span>
+        <span
+          className="mono text-xs truncate flex-1"
+          style={{ color: "var(--text)" }}
+        >
+          {preview}
+        </span>
+        {answer.trim() && !open && (
+          <span
+            className="mono text-[10px] shrink-0"
+            style={{ color: "var(--accent)" }}
+          >
+            ✓
+          </span>
+        )}
+        <span
+          className="mono text-xs shrink-0"
+          style={{ color: "var(--text-dim)" }}
+        >
+          {open ? "▾" : "▸"}
+        </span>
+      </button>
+      {open && (
+        <div
+          className="px-3 pb-3 pt-1 space-y-2 mono text-xs"
+          style={{ borderTop: "0.5px solid var(--border)" }}
+        >
+          {question.trim() && (
+            <div>
+              <span style={{ color: "var(--text-dim)" }}>{qPrefix}: </span>
+              <span style={{ color: "var(--text)" }}>{question}</span>
+            </div>
+          )}
+          {answer.trim() && (
+            <div>
+              <span style={{ color: "var(--accent)" }}>{aPrefix}: </span>
+              <span style={{ color: "var(--text)" }}>{answer}</span>
+            </div>
+          )}
+          {!question.trim() && !answer.trim() && (
+            <p style={{ color: "var(--text-muted)" }}>// no details recorded</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const STAGES: AppStatus[] = ["Applied", "OA", "Interview", "Offer", "Rejected"];
 const STAGE_COLORS: Record<AppStatus, string> = {
   Applied: "var(--blue)",
@@ -294,40 +387,105 @@ export default function DashboardClient({
                   </div>
                   {isExp && (
                     <div
-                      className="px-4 sm:px-5 pb-4 pt-1 mb-2 rounded-b-lg"
+                      className="px-4 sm:px-5 pb-4 pt-1 mb-2 rounded-b-lg space-y-4"
                       style={{ background: "var(--bg-hover)" }}
                     >
-                      <div
-                        className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-4 pt-3"
-                        style={{ borderTop: "0.5px solid var(--border)" }}
-                      >
-                        {[
-                          ["oa_score", app.oa_score],
-                          ["interview", app.interview_outcome],
-                          ["dsa", app.dsa_topics],
-                          ["behavioural", app.behavioural_questions],
-                        ]
-                          .filter(([, v]) => v)
-                          .map(([k, v]) => (
-                            <div key={k as string}>
+                      {/* Basic performance fields */}
+                      {(app.oa_score || app.interview_outcome) && (
+                        <div
+                          className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-3"
+                          style={{ borderTop: "0.5px solid var(--border)" }}
+                        >
+                          {app.oa_score && (
+                            <div>
                               <div
                                 className="mono text-xs uppercase tracking-widest mb-1.5"
                                 style={{ color: "var(--text-dim)" }}
                               >
-                                {k}
+                                oa score
                               </div>
                               <div
                                 className="mono text-sm"
                                 style={{ color: "var(--text)" }}
                               >
-                                {v}
+                                {app.oa_score}
                               </div>
                             </div>
-                          ))}
-                      </div>
+                          )}
+                          {app.interview_outcome && (
+                            <div>
+                              <div
+                                className="mono text-xs uppercase tracking-widest mb-1.5"
+                                style={{ color: "var(--text-dim)" }}
+                              >
+                                interview
+                              </div>
+                              <div
+                                className="mono text-sm"
+                                style={{ color: "var(--text)" }}
+                              >
+                                {app.interview_outcome}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* DSA Topics — collapsible list */}
+                      {app.dsa_topics && app.dsa_topics.length > 0 && (
+                        <div>
+                          <div
+                            className="mono text-xs uppercase tracking-widest mb-2"
+                            style={{ color: "var(--text-dim)" }}
+                          >
+                            dsa topics
+                          </div>
+                          <div className="space-y-1.5">
+                            {app.dsa_topics.map((item, i) => (
+                              <ExpandableItem
+                                key={i}
+                                label={item.topic}
+                                question={item.question}
+                                answer={item.approach}
+                                labelColor="#22C55E"
+                                qPrefix="Q"
+                                aPrefix="Approach"
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Behavioural — collapsible list */}
+                      {app.behavioural_questions &&
+                        app.behavioural_questions.length > 0 && (
+                          <div>
+                            <div
+                              className="mono text-xs uppercase tracking-widest mb-2"
+                              style={{ color: "var(--text-dim)" }}
+                            >
+                              behavioural
+                            </div>
+                            <div className="space-y-1.5">
+                              {app.behavioural_questions.map((bq, i) => (
+                                <ExpandableItem
+                                  key={i}
+                                  label={`Q${i + 1}`}
+                                  question={bq.question}
+                                  answer={bq.answer}
+                                  labelColor="#71717A"
+                                  qPrefix="Q"
+                                  aPrefix="A"
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                      {/* Reflection */}
                       {(app.mistakes || app.improvements) && (
                         <div
-                          className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-4"
+                          className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-3"
                           style={{ borderTop: "0.5px solid var(--border)" }}
                         >
                           {app.mistakes && (
@@ -364,7 +522,9 @@ export default function DashboardClient({
                           )}
                         </div>
                       )}
-                      <div className="flex gap-2 mt-4 sm:hidden">
+
+                      {/* Mobile edit/delete */}
+                      <div className="flex gap-2 sm:hidden">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();

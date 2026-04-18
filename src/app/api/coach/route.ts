@@ -25,8 +25,28 @@ ${i + 1}. ${a.company} — ${a.role}
    Status: ${a.status}
    Source: ${a.source || "N/A"} | Resume: ${a.resume_version || "N/A"} | Cover Letter: ${a.cover_letter ? "Yes" : "No"}
    OA Score: ${a.oa_score || "N/A"} | Interview Outcome: ${a.interview_outcome || "N/A"}
-   DSA Topics: ${a.dsa_topics || "N/A"}
-   Behavioural Questions: ${a.behavioural_questions || "N/A"}
+   DSA Topics: ${
+     Array.isArray(a.dsa_topics) && a.dsa_topics.length
+       ? "\n" +
+         a.dsa_topics
+           .map(
+             (d: any) =>
+               `     - ${d.topic}${d.question ? `\n       Q: ${d.question}` : ""}${d.approach ? `\n       Approach: ${d.approach}` : ""}`,
+           )
+           .join("\n")
+       : "N/A"
+   }
+   Behavioural Questions:${
+     Array.isArray(a.behavioural_questions) && a.behavioural_questions.length
+       ? "\n" +
+         a.behavioural_questions
+           .map(
+             (q: any) =>
+               `     - Q: ${q.question}\n       A: ${q.answer || "(no answer recorded)"}`,
+           )
+           .join("\n")
+       : " N/A"
+   }
    Mistakes: ${a.mistakes || "N/A"}
    Improvements: ${a.improvements || "N/A"}
 `,

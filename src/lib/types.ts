@@ -1,5 +1,16 @@
 export type AppStatus = "Applied" | "OA" | "Interview" | "Offer" | "Rejected";
 
+export interface BehaviouralQuestion {
+  question: string;
+  answer: string;
+}
+
+export interface DSATopic {
+  topic: string;
+  question: string;
+  approach: string;
+}
+
 export interface Application {
   id: string;
   user_id: string;
@@ -13,8 +24,8 @@ export interface Application {
   cover_letter: boolean;
   oa_score: string | null;
   interview_outcome: string | null;
-  dsa_topics: string | null;
-  behavioural_questions: string | null;
+  dsa_topics: DSATopic[];
+  behavioural_questions: BehaviouralQuestion[];
   mistakes: string | null;
   improvements: string | null;
   created_at: string;
