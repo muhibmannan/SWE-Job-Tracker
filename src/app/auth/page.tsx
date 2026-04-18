@@ -20,6 +20,13 @@ export default function AuthPage() {
     setMessage("");
 
     if (isLogin) {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) setError(error.message);
+      else router.push("/dashboard");
+    } else {
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -27,10 +34,6 @@ export default function AuthPage() {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
-      if (error) setError(error.message);
-      else router.push("/dashboard");
-    } else {
-      const { error } = await supabase.auth.signUp({ email, password });
       if (error) setError(error.message);
       else setMessage("Check your email for a confirmation link!");
     }
