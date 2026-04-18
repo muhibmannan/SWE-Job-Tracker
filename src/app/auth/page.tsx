@@ -20,9 +20,12 @@ export default function AuthPage() {
     setMessage("");
 
     if (isLogin) {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
       });
       if (error) setError(error.message);
       else router.push("/dashboard");
