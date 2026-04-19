@@ -207,7 +207,7 @@ export default function DashboardClient({
                 className="text-4xl sm:text-4xl ml-1"
                 style={{ color: "var(--text-dim)" }}
               >
-                /apps
+                /applications
               </span>
             </h1>
             <p
@@ -271,7 +271,7 @@ export default function DashboardClient({
 
         {/* Pipeline */}
         <div
-          className="flex rounded-lg overflow-hidden mb-8 overflow-x-auto scrollbar-none"
+          className="flex rounded-lg mb-8 overflow-x-auto scrollbar-none"
           style={{
             border: "0.5px solid var(--border)",
             WebkitOverflowScrolling: "touch",

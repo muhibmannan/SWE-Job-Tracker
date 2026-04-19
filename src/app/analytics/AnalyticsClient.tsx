@@ -265,15 +265,19 @@ export default function AnalyticsClient({
                         nameKey="name"
                         cx="50%"
                         cy="50%"
-                        outerRadius={80}
-                        innerRadius={45}
+                        outerRadius={65}
+                        innerRadius={38}
                         paddingAngle={2}
-                        label={({ name, percent }) =>
-                          `${name} ${Math.round((percent ?? 0) * 100)}%`
-                        }
+                        label={(entry: { name?: string; percent?: number }) => {
+                          const name = entry.name ?? "";
+                          const percent = entry.percent ?? 0;
+                          const short =
+                            name.length > 10 ? name.slice(0, 10) + "…" : name;
+                          return `${short} ${Math.round(percent * 100)}%`;
+                        }}
                         labelLine={false}
                         style={{
-                          fontSize: 11,
+                          fontSize: 10,
                           fontFamily: "var(--font-mono)",
                           fill: "var(--text-dim)",
                         }}
