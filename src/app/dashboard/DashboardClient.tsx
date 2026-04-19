@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { User } from "@supabase/supabase-js";
 import { Application, AppStatus, NewApplication } from "@/lib/types";
 import { createClient } from "@/lib/supabase/client";
@@ -138,10 +138,60 @@ export default function DashboardClient({
   const [filter, setFilter] = useState<AppStatus | "All">("All");
   const [modal, setModal] = useState<Partial<Application> | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
   const supabase = createClient();
 
-  const filtered =
-    filter === "All" ? apps : apps.filter((a) => a.status === filter);
+  // Cmd+K / Ctrl+K to focus the search input
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchRef.current?.focus();
+        searchRef.current?.select();
+      }
+      if (e.key === "Escape" && document.activeElement === searchRef.current) {
+        setQuery("");
+        searchRef.current?.blur();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
+  const filtered = useMemo(() => {
+    const byStatus =
+      filter === "All" ? apps : apps.filter((a) => a.status === filter);
+
+    const q = query.trim().toLowerCase();
+    if (!q) return byStatus;
+
+    return byStatus.filter((a) => {
+      const haystack = [
+        a.company,
+        a.role,
+        a.status,
+        a.source ?? "",
+        a.mistakes ?? "",
+        a.improvements ?? "",
+        a.oa_score ?? "",
+        a.interview_outcome ?? "",
+        ...(a.dsa_topics ?? []).flatMap((t) => [
+          t.topic,
+          t.question,
+          t.approach,
+        ]),
+        ...(a.behavioural_questions ?? []).flatMap((b) => [
+          b.question,
+          b.answer,
+        ]),
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(q);
+    });
+  }, [apps, filter, query]);
   const count = (s: AppStatus) => apps.filter((a) => a.status === s).length;
   const total = apps.length;
   const waiting = apps.filter((a) =>
@@ -300,19 +350,21 @@ export default function DashboardClient({
         </div>
 
         {/* Section header */}
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center justify-between mb-4 gap-3">
           <p
-            className="mono text-sm uppercase tracking-widest"
+            className="mono text-sm uppercase tracking-widest truncate"
             style={{ color: "var(--text-dim)" }}
           >
             //{" "}
-            {filter === "All"
-              ? "all applications"
-              : `${filter.toLowerCase()} stage`}
+            {query.trim()
+              ? `${filtered.length} match${filtered.length === 1 ? "" : "es"}`
+              : filter === "All"
+                ? "all applications"
+                : `${filter.toLowerCase()} stage`}
           </p>
           <button
             onClick={() => setModal({})}
-            className="mono text-sm px-4 py-2 rounded transition-colors hover:opacity-70"
+            className="mono text-sm px-4 py-2 rounded transition-colors hover:opacity-70 shrink-0"
             style={{
               border: "0.5px solid var(--border-strong)",
               color: "var(--text)",
@@ -322,13 +374,70 @@ export default function DashboardClient({
           </button>
         </div>
 
+        {/* Search bar */}
+        <div
+          className="flex items-center gap-2 rounded-lg mb-5 px-3.5 transition-colors focus-within:border-[var(--accent)]"
+          style={{
+            background: "var(--bg-elev)",
+            border: "0.5px solid var(--border-strong)",
+            minHeight: "44px",
+          }}
+        >
+          <span
+            className="mono text-base shrink-0"
+            style={{ color: "var(--accent)" }}
+          >
+            $
+          </span>
+          <input
+            ref={searchRef}
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="search company, role, notes, dsa topics..."
+            autoComplete="off"
+            spellCheck={false}
+            className="flex-1 mono bg-transparent outline-none placeholder:opacity-60"
+            style={{
+              color: "var(--text)",
+              fontSize: "16px",
+            }}
+          />
+          {query ? (
+            <button
+              type="button"
+              onClick={() => {
+                setQuery("");
+                searchRef.current?.focus();
+              }}
+              className="mono text-xs px-2 py-1 transition-opacity hover:opacity-70 shrink-0"
+              style={{ color: "var(--text-dim)" }}
+              aria-label="Clear search"
+            >
+              ✕
+            </button>
+          ) : (
+            <span
+              className="mono text-xs hidden sm:inline shrink-0 px-1.5 py-0.5 rounded"
+              style={{
+                color: "var(--text-dim)",
+                border: "0.5px solid var(--border)",
+              }}
+            >
+              ⌘K
+            </span>
+          )}
+        </div>
+
         {/* Applications */}
         {filtered.length === 0 ? (
           <div className="text-center py-24">
             <p className="mono text-base" style={{ color: "var(--text-dim)" }}>
               {apps.length === 0
                 ? '// no applications yet → hit "+ new" to start'
-                : "// no matches in this stage"}
+                : query.trim()
+                  ? `// no matches for "${query}" → try a different term`
+                  : "// no matches in this stage"}
             </p>
           </div>
         ) : (
