@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Application } from "@/lib/types";
 
 const QUICK_PROMPTS = [
@@ -19,15 +19,37 @@ export default function AICoach({
 }) {
   const [open, setOpen] = useState(false);
   const [question, setQuestion] = useState("");
-  const [response, setResponse] = useState("");
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState<{ q: string; a: string }[]>([]);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({
+      top: scrollRef.current.scrollHeight,
+      behavior: "smooth",
+    });
+  }, [history, loading]);
 
   const ask = async (q: string) => {
     if (!q.trim() || loading) return;
     setLoading(true);
     setQuestion("");
-    setResponse("");
 
     try {
       const res = await fetch("/api/coach", {
@@ -40,7 +62,7 @@ export default function AICoach({
     } catch {
       setHistory((h) => [
         ...h,
-        { q, a: "Something went wrong. Please try again." },
+        { q, a: "// error: connection failed → please try again" },
       ]);
     }
     setLoading(false);
@@ -51,73 +73,135 @@ export default function AICoach({
       {/* Floating button */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 px-4 py-3 rounded-2xl font-bold text-sm shadow-lg transition-transform hover:scale-105"
+        aria-label="Open AI Career Coach"
+        className="fixed bottom-24 right-4 sm:bottom-6 sm:right-6 z-40 mono text-sm font-medium flex items-center gap-2 px-4 py-3 rounded-full transition-all hover:opacity-90 active:scale-[0.98]"
         style={{
-          background: "linear-gradient(135deg, #1f6feb, #8b5cf6)",
-          color: "#fff",
-          boxShadow: "0 0 20px #1f6feb66",
+          background: "var(--accent)",
+          color: "#0A0A0A",
+          boxShadow: "0 4px 24px rgba(34, 197, 94, 0.25)",
         }}
       >
-        <span className="text-lg">🤖</span>
-        <span className="hidden sm:inline">AI Career Coach</span>
+        <span
+          className="inline-block w-1.5 h-1.5 rounded-full"
+          style={{ background: "#0A0A0A" }}
+        />
+        <span>$ coach</span>
       </button>
 
       {/* Panel */}
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-end sm:justify-end"
-          style={{ background: "rgba(1,4,9,0.6)" }}
+          className="fixed inset-0 z-50 flex items-end sm:items-center sm:justify-end"
+          style={{
+            background: "rgba(0,0,0,0.7)",
+            backdropFilter: "blur(4px)",
+          }}
           onClick={() => setOpen(false)}
         >
           <div
-            className="w-full sm:w-[420px] h-[90vh] sm:h-screen flex flex-col border-l"
-            style={{ background: "#0d1117", borderColor: "#21262d" }}
+            className="w-full sm:w-[440px] sm:h-screen flex flex-col rounded-t-2xl sm:rounded-none overflow-hidden"
+            style={{
+              background: "var(--bg-elev)",
+              border: "0.5px solid var(--border)",
+              maxHeight: "92dvh",
+              height: "92dvh",
+            }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
+            {/* Mobile handle */}
+            <div className="flex justify-center pt-3 pb-1 sm:hidden">
+              <div
+                className="w-10 h-1 rounded-full"
+                style={{ background: "var(--border-strong)" }}
+              />
+            </div>
+
+            {/* Terminal chrome header */}
             <div
-              className="flex items-center justify-between px-5 py-4 border-b"
-              style={{ borderColor: "#21262d" }}
+              className="flex items-center justify-between px-4 py-3"
+              style={{
+                borderBottom: "0.5px solid var(--border)",
+                background: "var(--bg)",
+              }}
             >
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">🤖</span>
-                  <span className="font-bold text-white">AI Career Coach</span>
+              <div className="flex items-center gap-2">
+                <div className="hidden sm:flex gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setOpen(false)}
+                    className="w-2.5 h-2.5 rounded-full transition-opacity hover:opacity-70"
+                    style={{ background: "#FF5F57" }}
+                    aria-label="Close"
+                  />
+                  <div
+                    className="w-2.5 h-2.5 rounded-full"
+                    style={{ background: "#FEBC2E" }}
+                  />
+                  <div
+                    className="w-2.5 h-2.5 rounded-full"
+                    style={{ background: "#28C840" }}
+                  />
                 </div>
-                <p className="text-xs mt-0.5" style={{ color: "#8b949e" }}>
-                  Powered by Groq · {applications.length} applications analysed
-                </p>
+                <span
+                  className="mono text-xs sm:ml-2"
+                  style={{ color: "var(--text-dim)" }}
+                >
+                  coach.sh
+                  <span className="hidden sm:inline"> — zsh</span>
+                </span>
               </div>
               <button
+                type="button"
                 onClick={() => setOpen(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-lg"
-                style={{ color: "#8b949e", background: "#21262d" }}
+                className="mono text-sm sm:text-xs w-10 h-10 sm:w-auto sm:h-auto flex items-center justify-center rounded-lg sm:rounded-none transition-opacity hover:opacity-70 -mr-2 sm:mr-0"
+                style={{ color: "var(--text)", background: "transparent" }}
+                aria-label="Close"
               >
-                ✕
+                <span className="sm:hidden text-xl">✕</span>
+                <span className="hidden sm:inline">esc</span>
               </button>
             </div>
 
-            {/* Chat history */}
-            <div className="flex-1 overflow-auto px-5 py-4 space-y-5">
+            {/* Sub-header */}
+            <div
+              className="px-5 py-3"
+              style={{ borderBottom: "0.5px solid var(--border)" }}
+            >
+              <p className="mono text-sm" style={{ color: "var(--text-dim)" }}>
+                // <span style={{ color: "var(--accent)" }}>groq</span> ·{" "}
+                {applications.length} application
+                {applications.length === 1 ? "" : "s"} in context
+              </p>
+            </div>
+
+            {/* Chat body */}
+            <div
+              ref={scrollRef}
+              className="flex-1 overflow-y-auto px-5 py-5 space-y-5"
+            >
               {history.length === 0 && !loading && (
                 <div>
-                  <p className="text-sm mb-4" style={{ color: "#8b949e" }}>
-                    Ask me anything about your applications. I'll analyse your
-                    data and give you specific, actionable advice.
+                  <p
+                    className="mono text-sm mb-4"
+                    style={{ color: "var(--text-dim)" }}
+                  >
+                    // ask anything about your applications → i&apos;ll analyse
+                    your data and give you specific, actionable advice
                   </p>
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     {QUICK_PROMPTS.map((p) => (
                       <button
                         key={p}
                         onClick={() => ask(p)}
-                        className="w-full text-left px-3 py-2.5 rounded-xl text-xs border transition-colors"
+                        className="w-full text-left mono text-sm px-3 py-2.5 rounded-lg transition-colors hover:opacity-70"
                         style={{
-                          borderColor: "#21262d",
-                          color: "#8b949e",
-                          background: "#161b22",
+                          background: "var(--bg)",
+                          border: "0.5px solid var(--border)",
+                          color: "var(--text-dim)",
                         }}
                       >
-                        {p}
+                        <span style={{ color: "var(--accent)" }}>$ </span>
+                        {p.toLowerCase()}
                       </button>
                     ))}
                   </div>
@@ -126,113 +210,121 @@ export default function AICoach({
 
               {history.map((h, i) => (
                 <div key={i} className="space-y-3">
-                  {/* Question */}
-                  <div className="flex justify-end">
-                    <div
-                      className="max-w-[85%] px-4 py-2.5 rounded-2xl rounded-tr-sm text-sm"
-                      style={{ background: "#1f6feb", color: "#fff" }}
-                    >
-                      {h.q}
-                    </div>
+                  {/* Question — as terminal prompt */}
+                  <div>
+                    <p className="mono text-sm leading-relaxed break-words">
+                      <span style={{ color: "var(--accent)" }}>$ </span>
+                      <span style={{ color: "var(--text)" }}>{h.q}</span>
+                    </p>
                   </div>
-                  {/* Answer */}
-                  <div className="flex justify-start">
-                    <div
-                      className="max-w-[95%] px-4 py-3 rounded-2xl rounded-tl-sm text-sm border"
-                      style={{
-                        background: "#161b22",
-                        borderColor: "#21262d",
-                        color: "#e6edf3",
-                      }}
+                  {/* Answer — as output */}
+                  <div
+                    className="px-4 py-3 rounded-lg"
+                    style={{
+                      background: "var(--bg)",
+                      border: "0.5px solid var(--border)",
+                    }}
+                  >
+                    <p
+                      className="text-base whitespace-pre-wrap break-words"
+                      style={{ color: "var(--text)", lineHeight: 1.65 }}
                     >
-                      <div
-                        className="prose-sm whitespace-pre-wrap"
-                        style={{ lineHeight: 1.6 }}
-                      >
-                        {h.a}
-                      </div>
-                    </div>
+                      {h.a}
+                    </p>
                   </div>
                 </div>
               ))}
 
               {loading && (
-                <div className="flex justify-start">
-                  <div
-                    className="px-4 py-3 rounded-2xl rounded-tl-sm border"
-                    style={{ background: "#161b22", borderColor: "#21262d" }}
+                <div>
+                  <p
+                    className="mono text-sm flex items-center gap-2"
+                    style={{ color: "var(--text-dim)" }}
                   >
-                    <div className="flex gap-1.5 items-center">
-                      {[0, 1, 2].map((i) => (
-                        <div
-                          key={i}
-                          className="w-2 h-2 rounded-full animate-bounce"
-                          style={{
-                            background: "#8b949e",
-                            animationDelay: `${i * 0.15}s`,
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
+                    <span style={{ color: "var(--accent)" }}>$</span>
+                    <span>analysing</span>
+                    {[0, 1, 2].map((i) => (
+                      <span
+                        key={i}
+                        className="inline-block w-1 h-1 rounded-full animate-bounce"
+                        style={{
+                          background: "var(--accent)",
+                          animationDelay: `${i * 0.15}s`,
+                        }}
+                      />
+                    ))}
+                  </p>
                 </div>
               )}
             </div>
 
-            {/* Quick prompts after first message */}
+            {/* Quick prompts carousel — after first message */}
             {history.length > 0 && !loading && (
               <div
-                className="px-5 py-2 border-t overflow-x-auto"
-                style={{ borderColor: "#21262d" }}
+                className="px-5 py-2.5 overflow-x-auto scrollbar-none"
+                style={{ borderTop: "0.5px solid var(--border)" }}
               >
-                <div className="flex gap-2 pb-1">
-                  {QUICK_PROMPTS.slice(0, 3).map((p) => (
+                <div className="flex gap-1.5 pb-0.5">
+                  {QUICK_PROMPTS.map((p) => (
                     <button
                       key={p}
                       onClick={() => ask(p)}
-                      className="whitespace-nowrap px-3 py-1.5 rounded-xl text-xs border flex-shrink-0"
+                      className="whitespace-nowrap mono text-sm px-3 py-1.5 rounded-lg shrink-0 transition-colors hover:opacity-70"
                       style={{
-                        borderColor: "#21262d",
-                        color: "#8b949e",
-                        background: "#161b22",
+                        background: "var(--bg)",
+                        border: "0.5px solid var(--border)",
+                        color: "var(--text-dim)",
                       }}
                     >
-                      {p}
+                      {p.toLowerCase().split(" ").slice(0, 5).join(" ")}
+                      {p.split(" ").length > 5 ? "…" : ""}
                     </button>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Input */}
+            {/* Input — terminal style */}
             <div
-              className="px-5 py-4 border-t"
-              style={{ borderColor: "#21262d" }}
+              className="px-4 py-3"
+              style={{
+                borderTop: "0.5px solid var(--border)",
+                background: "var(--bg)",
+              }}
             >
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
+                <span
+                  className="mono text-base shrink-0"
+                  style={{ color: "var(--accent)" }}
+                >
+                  $
+                </span>
                 <input
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && ask(question)}
-                  placeholder="Ask about your applications…"
-                  className="flex-1 px-4 py-2.5 rounded-xl text-sm border outline-none"
+                  placeholder="ask about your applications..."
+                  className="flex-1 mono bg-transparent outline-none"
                   style={{
-                    background: "#161b22",
-                    borderColor: "#30363d",
-                    color: "#e6edf3",
+                    color: "var(--text)",
+                    fontSize: "16px",
+                    minHeight: "36px",
                   }}
+                  disabled={loading}
                 />
                 <button
                   onClick={() => ask(question)}
                   disabled={loading || !question.trim()}
-                  className="px-4 py-2.5 rounded-xl text-sm font-bold transition-opacity"
+                  className="mono text-sm font-medium px-3 py-2 rounded-lg transition-all hover:opacity-90 active:scale-[0.98]"
                   style={{
-                    background: "#1f6feb",
-                    color: "#fff",
-                    opacity: loading || !question.trim() ? 0.5 : 1,
+                    background: "var(--accent)",
+                    color: "#0A0A0A",
+                    opacity: loading || !question.trim() ? 0.4 : 1,
+                    cursor:
+                      loading || !question.trim() ? "not-allowed" : "pointer",
                   }}
                 >
-                  Ask
+                  run
                 </button>
               </div>
             </div>
