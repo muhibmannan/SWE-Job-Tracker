@@ -28,10 +28,12 @@ export default function ResumesClient({
   user,
   initialResumes,
   firstName,
+  usageCount,
 }: {
   user: User;
   initialResumes: Resume[];
   firstName: string | null;
+  usageCount: Record<string, number>;
 }) {
   const supabase = createClient();
   const [resumes, setResumes] = useState<Resume[]>(initialResumes);
@@ -334,10 +336,23 @@ export default function ResumesClient({
               >
                 <div className="min-w-0">
                   <div
-                    className="text-base font-medium truncate"
+                    className="text-base font-medium truncate flex items-center gap-2"
                     style={{ color: "var(--text)" }}
                   >
-                    {resume.label}
+                    <span className="truncate">{resume.label}</span>
+                    {usageCount[resume.id] > 0 && (
+                      <span
+                        className="mono text-xs font-normal px-2 py-0.5 rounded shrink-0"
+                        style={{
+                          background: "var(--accent-bg)",
+                          color: "var(--accent)",
+                          border: "0.5px solid var(--accent)",
+                        }}
+                      >
+                        {usageCount[resume.id]} app
+                        {usageCount[resume.id] === 1 ? "" : "s"}
+                      </span>
+                    )}
                   </div>
                   <div
                     className="mono text-sm mt-1 truncate"

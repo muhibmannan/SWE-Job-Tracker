@@ -415,6 +415,44 @@ export default function DashboardClient({
                       className="px-4 sm:px-5 pb-4 pt-1 mb-2 rounded-b-lg space-y-4"
                       style={{ background: "var(--bg-hover)" }}
                     >
+                      {/* Linked resume */}
+                      {app.resume_id &&
+                        (() => {
+                          const linkedResume = resumes.find(
+                            (r) => r.id === app.resume_id,
+                          );
+                          if (!linkedResume) return null;
+                          return (
+                            <div
+                              className="pt-3"
+                              style={{ borderTop: "0.5px solid var(--border)" }}
+                            >
+                              <div
+                                className="mono text-xs uppercase tracking-widest mb-1.5"
+                                style={{ color: "var(--text-dim)" }}
+                              >
+                                resume
+                              </div>
+                              <button
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  const { data } = await supabase.storage
+                                    .from("resumes")
+                                    .createSignedUrl(
+                                      linkedResume.file_path,
+                                      60,
+                                    );
+                                  if (data)
+                                    window.open(data.signedUrl, "_blank");
+                                }}
+                                className="mono text-sm transition-opacity hover:opacity-70"
+                                style={{ color: "var(--accent)" }}
+                              >
+                                $ open {linkedResume.label.toLowerCase()} →
+                              </button>
+                            </div>
+                          );
+                        })()}
                       {/* Basic performance fields */}
                       {(app.oa_score || app.interview_outcome) && (
                         <div

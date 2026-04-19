@@ -39,7 +39,6 @@ const EMPTY: NewApplication = {
   deadline: "",
   status: "Applied",
   source: "",
-  resume_version: "",
   resume_id: null,
   cover_letter: false,
   oa_score: "",

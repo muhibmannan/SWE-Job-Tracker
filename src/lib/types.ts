@@ -20,7 +20,6 @@ export interface Application {
   deadline: string | null;
   status: AppStatus;
   source: string | null;
-  resume_version: string | null;
   resume_id: string | null;
   cover_letter: boolean;
   oa_score: string | null;
