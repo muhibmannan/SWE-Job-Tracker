@@ -33,7 +33,7 @@ So I built jobtracker.sh: a dev-tool-flavoured tracker with a pipeline view, ful
 
 The main dashboard — hero stats, pipeline filter tabs, search bar with `⌘K` shortcut, and an expanded application card showing the linked resume, DSA topics, and behavioural Q&A.
 
-![Pipeline with expanded card](./screenshots/app-expanded.png)
+![Pipeline with expanded card](./screenshots/dashboard-desktop.png)
 
 ### Analytics
 
@@ -45,7 +45,7 @@ Conversion rates, pipeline funnel, source breakdown, and weekly application velo
 
 Rich logging for every application — core details, strategy, performance notes, DSA topics asked, behavioural questions with full STAR-style answers, and post-mortem reflection.
 
-![New application modal](./screenshots/dashboard-desktop.png)
+![New application modal](./screenshots/app-expanded.png)
 
 ### AI Coach
 
