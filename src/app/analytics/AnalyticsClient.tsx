@@ -22,9 +22,11 @@ import {
 export default function AnalyticsClient({
   user,
   applications,
+  firstName,
 }: {
   user: User;
   applications: Application[];
+  firstName: string | null;
 }) {
   const total = applications.length;
 
@@ -158,7 +160,7 @@ export default function AnalyticsClient({
 
   return (
     <div className="min-h-screen" style={{ background: "var(--bg)" }}>
-      <Navbar email={user.email ?? ""} />
+      <Navbar email={user.email ?? ""} firstName={firstName} />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10 pb-28 sm:pb-10">
         {/* Hero */}

@@ -9,10 +9,19 @@ export default async function AnalyticsPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/auth");
 
-  const { data: applications } = await supabase
-    .from("applications")
-    .select("*")
-    .order("date_applied", { ascending: true });
+  const [{ data: applications }, { data: profile }] = await Promise.all([
+    supabase
+      .from("applications")
+      .select("*")
+      .order("date_applied", { ascending: true }),
+    supabase.from("profiles").select("first_name").eq("id", user.id).single(),
+  ]);
 
-  return <AnalyticsClient user={user} applications={applications ?? []} />;
+  return (
+    <AnalyticsClient
+      user={user}
+      applications={applications ?? []}
+      firstName={profile?.first_name ?? null}
+    />
+  );
 }
