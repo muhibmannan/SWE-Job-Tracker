@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Application, AppStatus, NewApplication } from "@/lib/types";
 import DSATopicsInput from "./DSATopicsInput";
 import BehaviouralQuestionsInput from "./BehaviouralQuestionsInput";
+import { Resume } from "@/lib/types";
 
 const STAGES: AppStatus[] = ["Applied", "OA", "Interview", "Offer", "Rejected"];
 const SOURCES = [
@@ -26,6 +27,7 @@ const STAGE_COLORS: Record<AppStatus, string> = {
 
 interface Props {
   app: Partial<Application> | null;
+  resumes: Resume[];
   onClose: () => void;
   onSave: (data: NewApplication) => Promise<void>;
 }
@@ -38,6 +40,7 @@ const EMPTY: NewApplication = {
   status: "Applied",
   source: "",
   resume_version: "",
+  resume_id: null,
   cover_letter: false,
   oa_score: "",
   interview_outcome: "",
@@ -47,7 +50,12 @@ const EMPTY: NewApplication = {
   improvements: "",
 };
 
-export default function ApplicationModal({ app, onClose, onSave }: Props) {
+export default function ApplicationModal({
+  app,
+  resumes,
+  onClose,
+  onSave,
+}: Props) {
   const [form, setForm] = useState<NewApplication>({ ...EMPTY, ...app });
   const [saving, setSaving] = useState(false);
   const set = (k: keyof NewApplication, v: any) =>
@@ -290,13 +298,19 @@ export default function ApplicationModal({ app, onClose, onSave }: Props) {
             </div>
             <div>
               <Label>cv version</Label>
-              <input
+              <select
                 className={inputClasses}
                 style={inputStyle}
-                value={form.resume_version ?? ""}
-                onChange={(e) => set("resume_version", e.target.value)}
-                placeholder="v1 / v2 / tailored"
-              />
+                value={form.resume_id ?? ""}
+                onChange={(e) => set("resume_id", e.target.value || null)}
+              >
+                <option value="">— none —</option>
+                {resumes.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.label}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <Label>cover letter</Label>

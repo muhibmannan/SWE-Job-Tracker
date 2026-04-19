@@ -21,6 +21,7 @@ export interface Application {
   status: AppStatus;
   source: string | null;
   resume_version: string | null;
+  resume_id: string | null;
   cover_letter: boolean;
   oa_score: string | null;
   interview_outcome: string | null;
@@ -31,6 +32,16 @@ export interface Application {
   created_at: string;
   updated_at: string;
 }
+
+export type Resume = {
+  id: string;
+  user_id: string;
+  label: string;
+  file_path: string;
+  filename: string;
+  file_size: number | null;
+  created_at: string;
+};
 
 export type NewApplication = Omit<
   Application,

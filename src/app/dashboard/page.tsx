@@ -9,19 +9,25 @@ export default async function DashboardPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/auth");
 
-  const [{ data: applications }, { data: profile }] = await Promise.all([
-    supabase
-      .from("applications")
-      .select("*")
-      .order("created_at", { ascending: false }),
-    supabase.from("profiles").select("first_name").eq("id", user.id).single(),
-  ]);
+  const [{ data: applications }, { data: profile }, { data: resumes }] =
+    await Promise.all([
+      supabase
+        .from("applications")
+        .select("*")
+        .order("created_at", { ascending: false }),
+      supabase.from("profiles").select("first_name").eq("id", user.id).single(),
+      supabase
+        .from("resumes")
+        .select("*")
+        .order("created_at", { ascending: false }),
+    ]);
 
   return (
     <DashboardClient
       user={user}
       initialApps={applications ?? []}
       firstName={profile?.first_name ?? null}
+      resumes={resumes ?? []}
     />
   );
 }

@@ -9,6 +9,7 @@ import PipelineCard from "@/components/PipelineCard";
 import ApplicationModal from "@/components/ApplicationModal";
 import AICoach from "@/components/AICoach";
 import MobileNav from "@/components/MobileNav";
+import { Resume } from "@/lib/types";
 
 function ExpandableItem({
   label,
@@ -126,10 +127,12 @@ export default function DashboardClient({
   user,
   initialApps,
   firstName,
+  resumes,
 }: {
   user: User;
   initialApps: Application[];
   firstName: string | null;
+  resumes: Resume[];
 }) {
   const [apps, setApps] = useState<Application[]>(initialApps);
   const [filter, setFilter] = useState<AppStatus | "All">("All");
@@ -586,6 +589,7 @@ export default function DashboardClient({
       {modal !== null && (
         <ApplicationModal
           app={modal}
+          resumes={resumes}
           onClose={() => setModal(null)}
           onSave={handleSave}
         />
