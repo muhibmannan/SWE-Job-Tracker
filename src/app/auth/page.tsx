@@ -12,6 +12,7 @@ export default function AuthPage() {
   const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -73,7 +74,12 @@ export default function AuthPage() {
     background: "var(--bg)",
     borderColor: "var(--border-strong)",
     color: "var(--text)",
+    fontSize: "16px",
+    minHeight: "44px",
   };
+
+  const inputClasses =
+    "w-full mono px-3.5 rounded-lg outline-none border transition-colors focus:border-[var(--accent)]";
 
   const Label = ({ children }: { children: string }) => (
     <label
@@ -85,7 +91,7 @@ export default function AuthPage() {
   );
 
   const buttonText = {
-    login: email ? `$ login --email ${email}` : "$ login",
+    login: "$ login",
     signup: "$ signup --create-account",
     forgot: "$ send-reset-link",
   }[mode];
@@ -235,7 +241,8 @@ export default function AuthPage() {
                       onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
                       placeholder="muhib"
                       autoFocus
-                      className="w-full mono text-sm px-3.5 py-3 rounded-lg outline-none border transition-colors focus:border-[var(--accent)]"
+                      autoComplete="given-name"
+                      className={inputClasses}
                       style={inputStyle}
                     />
                   </div>
@@ -250,7 +257,10 @@ export default function AuthPage() {
                     onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
                     placeholder="you@example.com"
                     autoFocus={mode !== "signup"}
-                    className="w-full mono text-sm px-3.5 py-3 rounded-lg outline-none border transition-colors focus:border-[var(--accent)]"
+                    autoComplete="email"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                    className={inputClasses}
                     style={inputStyle}
                   />
                 </div>
@@ -272,15 +282,33 @@ export default function AuthPage() {
                         </button>
                       )}
                     </div>
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-                      placeholder="••••••••"
-                      className="w-full mono text-sm px-3.5 py-3 rounded-lg outline-none border transition-colors focus:border-[var(--accent)]"
-                      style={inputStyle}
-                    />
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+                        placeholder="••••••••"
+                        autoComplete={
+                          mode === "signup"
+                            ? "new-password"
+                            : "current-password"
+                        }
+                        className={inputClasses + " pr-14"}
+                        style={inputStyle}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((v) => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 mono text-[10px] uppercase tracking-[0.12em] px-2 py-1 rounded transition-opacity hover:opacity-70"
+                        style={{ color: "var(--text-dim)" }}
+                        aria-label={
+                          showPassword ? "Hide password" : "Show password"
+                        }
+                      >
+                        {showPassword ? "hide" : "show"}
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -288,28 +316,36 @@ export default function AuthPage() {
               {/* Error / Message */}
               {error && (
                 <div
-                  className="mono text-xs px-3 py-2.5 rounded-lg mb-4 flex items-start gap-2"
+                  className="mono text-xs px-3 py-2.5 rounded-lg mb-4 flex items-start gap-2 break-words"
                   style={{
                     background: "rgba(248,113,113,0.08)",
                     border: "0.5px solid rgba(248,113,113,0.25)",
                   }}
                 >
                   <span style={{ color: "var(--red)" }}>!</span>
-                  <span style={{ color: "var(--red)" }}>
+                  <span
+                    className="break-words min-w-0"
+                    style={{ color: "var(--red)" }}
+                  >
                     {error.toLowerCase()}
                   </span>
                 </div>
               )}
               {message && (
                 <div
-                  className="mono text-xs px-3 py-2.5 rounded-lg mb-4 flex items-start gap-2"
+                  className="mono text-xs px-3 py-2.5 rounded-lg mb-4 flex items-start gap-2 break-words"
                   style={{
                     background: "var(--accent-bg)",
                     border: "0.5px solid rgba(34,197,94,0.25)",
                   }}
                 >
                   <span style={{ color: "var(--accent)" }}>✓</span>
-                  <span style={{ color: "var(--accent)" }}>{message}</span>
+                  <span
+                    className="break-words min-w-0"
+                    style={{ color: "var(--accent)" }}
+                  >
+                    {message}
+                  </span>
                 </div>
               )}
 
@@ -317,11 +353,12 @@ export default function AuthPage() {
               <button
                 onClick={handleSubmit}
                 disabled={loading}
-                className="w-full mono text-sm font-medium py-3 rounded-lg transition-all hover:opacity-90 active:scale-[0.98] truncate"
+                className="w-full mono text-sm font-medium rounded-lg transition-all hover:opacity-90 active:scale-[0.98]"
                 style={{
                   background: "var(--accent)",
                   color: "#0A0A0A",
                   opacity: loading ? 0.5 : 1,
+                  minHeight: "48px",
                 }}
               >
                 {loading ? "$ processing..." : buttonText}
