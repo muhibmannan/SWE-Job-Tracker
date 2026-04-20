@@ -225,23 +225,99 @@ export default function ApplicationModal({
             </div>
             <div>
               <Label>date applied</Label>
-              <input
-                type="date"
-                className="w-full mono px-3 rounded-lg outline-none border transition-colors focus:border-[var(--accent)]"
-                style={{ ...inputStyle, fontSize: "16px", minHeight: "44px" }}
-                value={form.date_applied ?? ""}
-                onChange={(e) => set("date_applied", e.target.value)}
-              />
+              {form.date_applied ? (
+                <div className="flex gap-2">
+                  <input
+                    type="date"
+                    className="flex-1 mono px-3 rounded-lg outline-none border transition-colors focus:border-[var(--accent)]"
+                    style={{
+                      ...inputStyle,
+                      fontSize: "16px",
+                      minHeight: "44px",
+                    }}
+                    value={form.date_applied}
+                    onChange={(e) => set("date_applied", e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => set("date_applied", "")}
+                    className="mono text-xs px-3 rounded-lg transition-opacity hover:opacity-70 shrink-0"
+                    style={{
+                      border: "0.5px solid var(--border-strong)",
+                      color: "var(--text-dim)",
+                      minHeight: "44px",
+                    }}
+                    aria-label="Clear date"
+                  >
+                    clear
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const today = new Date().toISOString().split("T")[0];
+                    set("date_applied", today);
+                  }}
+                  className="w-full mono text-sm text-left px-3 rounded-lg transition-colors hover:opacity-70"
+                  style={{
+                    background: "var(--bg)",
+                    border: "0.5px dashed var(--border-strong)",
+                    color: "var(--text-dim)",
+                    minHeight: "44px",
+                  }}
+                >
+                  + add date
+                </button>
+              )}
             </div>
             <div>
               <Label>deadline</Label>
-              <input
-                type="date"
-                className="w-full mono px-3 rounded-lg outline-none border transition-colors focus:border-[var(--accent)]"
-                style={{ ...inputStyle, fontSize: "16px", minHeight: "44px" }}
-                value={form.deadline ?? ""}
-                onChange={(e) => set("deadline", e.target.value)}
-              />
+              {form.deadline ? (
+                <div className="flex gap-2">
+                  <input
+                    type="date"
+                    className="flex-1 mono px-3 rounded-lg outline-none border transition-colors focus:border-[var(--accent)]"
+                    style={{
+                      ...inputStyle,
+                      fontSize: "16px",
+                      minHeight: "44px",
+                    }}
+                    value={form.deadline}
+                    onChange={(e) => set("deadline", e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => set("deadline", "")}
+                    className="mono text-xs px-3 rounded-lg transition-opacity hover:opacity-70 shrink-0"
+                    style={{
+                      border: "0.5px solid var(--border-strong)",
+                      color: "var(--text-dim)",
+                      minHeight: "44px",
+                    }}
+                    aria-label="Clear deadline"
+                  >
+                    clear
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const today = new Date().toISOString().split("T")[0];
+                    set("deadline", today);
+                  }}
+                  className="w-full mono text-sm text-left px-3 rounded-lg transition-colors hover:opacity-70"
+                  style={{
+                    background: "var(--bg)",
+                    border: "0.5px dashed var(--border-strong)",
+                    color: "var(--text-dim)",
+                    minHeight: "44px",
+                  }}
+                >
+                  + add date
+                </button>
+              )}
             </div>
           </div>
 
