@@ -7,8 +7,9 @@ export default function MobileNav() {
   const pathname = usePathname();
 
   const nav = [
-    { href: "/dashboard", label: "~/pipeline", icon: "▸" },
-    { href: "/analytics", label: "~/analytics", icon: "▸" },
+    { href: "/dashboard", label: "~/pipeline" },
+    { href: "/resumes", label: "~/resumes" },
+    { href: "/analytics", label: "~/analytics" },
   ];
 
   return (
