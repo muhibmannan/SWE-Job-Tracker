@@ -74,7 +74,7 @@ export default function AICoach({
       <button
         onClick={() => setOpen(true)}
         aria-label="Open AI Career Coach"
-        className="fixed bottom-24 right-4 sm:bottom-6 sm:right-6 z-40 mono text-sm font-medium flex items-center gap-2 px-4 py-3 rounded-full transition-all hover:opacity-90 active:scale-[0.98]"
+        className="fixed z-40 mono text-xs sm:text-sm font-medium flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 rounded-full transition-all hover:opacity-90 active:scale-[0.98] bottom-20 left-4 sm:bottom-6 sm:right-6 sm:left-auto"
         style={{
           background: "var(--accent)",
           color: "#0A0A0A",
