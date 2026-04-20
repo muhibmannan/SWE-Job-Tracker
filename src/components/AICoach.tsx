@@ -71,10 +71,11 @@ export default function AICoach({
   return (
     <>
       {/* Floating button */}
+      {/* Mobile — glass style */}
       <button
         onClick={() => setOpen(true)}
         aria-label="Open AI Career Coach"
-        className="fixed z-40 mono text-sm font-medium flex items-center gap-2 px-4 py-3 rounded-full transition-all hover:scale-105 active:scale-[0.98] bottom-20 right-4 sm:bottom-6 sm:right-6"
+        className="sm:hidden fixed z-40 mono text-sm font-medium flex items-center gap-2 px-4 py-3 rounded-full transition-all hover:scale-105 active:scale-[0.98] bottom-20 right-4"
         style={{
           background: "color-mix(in srgb, var(--bg-elev) 55%, transparent)",
           backdropFilter: "blur(20px) saturate(180%)",
@@ -92,6 +93,24 @@ export default function AICoach({
             background: "var(--accent)",
             boxShadow: "0 0 8px var(--accent)",
           }}
+        />
+        <span>$ coach</span>
+      </button>
+
+      {/* Desktop — solid green pill */}
+      <button
+        onClick={() => setOpen(true)}
+        aria-label="Open AI Career Coach"
+        className="hidden sm:flex fixed z-40 mono text-sm font-medium items-center gap-2 px-4 py-3 rounded-full transition-all hover:opacity-90 active:scale-[0.98] bottom-6 right-6"
+        style={{
+          background: "var(--accent)",
+          color: "#0A0A0A",
+          boxShadow: "0 4px 24px rgba(34, 197, 94, 0.25)",
+        }}
+      >
+        <span
+          className="inline-block w-1.5 h-1.5 rounded-full"
+          style={{ background: "#0A0A0A" }}
         />
         <span>$ coach</span>
       </button>
