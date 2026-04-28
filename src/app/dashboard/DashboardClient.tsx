@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { User } from "@supabase/supabase-js";
 import { Application, AppStatus, NewApplication } from "@/lib/types";
 import { createClient } from "@/lib/supabase/client";
@@ -167,11 +168,6 @@ export default function DashboardClient({
     let byStatus =
       filter === "All" ? apps : apps.filter((a) => a.status === filter);
 
-    // Hide rejected by default in "All" view, unless toggled on or actively searching
-    if (filter === "All" && !showRejected && !query.trim()) {
-      byStatus = byStatus.filter((a) => a.status !== "Rejected");
-    }
-
     const q = query.trim().toLowerCase();
     if (!q) return byStatus;
 
@@ -200,7 +196,7 @@ export default function DashboardClient({
 
       return haystack.includes(q);
     });
-  }, [apps, filter, query, showRejected]);
+  }, [apps, filter, query]);
 
   const count = (s: AppStatus) => apps.filter((a) => a.status === s).length;
   const total = apps.length;
@@ -517,290 +513,318 @@ export default function DashboardClient({
           <div className="flex flex-col gap-1">
             {filtered.map((app) => {
               const isExp = expanded === app.id;
+              const isHiddenRejected =
+                app.status === "Rejected" &&
+                filter === "All" &&
+                !query.trim() &&
+                !showRejected;
+
               return (
-                <React.Fragment key={app.id}>
-                  <div
-                    className="grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_auto_auto_auto] gap-4 sm:gap-6 items-center py-4 px-4 sm:px-5 rounded-lg cursor-pointer transition-colors"
-                    style={{
-                      background: isExp ? "var(--bg-hover)" : "transparent",
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isExp)
-                        e.currentTarget.style.background = "var(--bg-hover)";
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isExp)
-                        e.currentTarget.style.background = "transparent";
-                    }}
-                    onClick={() => setExpanded(isExp ? null : app.id)}
-                  >
-                    <div className="min-w-0">
-                      <div
-                        className="text-base font-medium truncate"
-                        style={{ color: "var(--text)" }}
-                      >
-                        {app.company}
-                      </div>
-                      <div
-                        className="mono text-sm mt-1 truncate"
-                        style={{ color: "var(--text-dim)" }}
-                      >
-                        {app.role.toLowerCase().replace(/ /g, "-")}
-                        {app.source && ` → ${app.source.toLowerCase()}`}
-                      </div>
-                    </div>
-                    <div
-                      className="mono text-sm hidden sm:block"
-                      style={{ color: "var(--text-dim)" }}
-                      title={formatAbsoluteDate(app.date_applied)}
+                <AnimatePresence key={app.id} initial={false}>
+                  {!isHiddenRejected && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                      style={{ overflow: "hidden" }}
                     >
-                      {formatRelativeDate(app.date_applied)}
-                    </div>
-                    <span
-                      className="inline-flex items-center gap-1.5 mono text-xs uppercase tracking-wider px-2.5 py-1.5 rounded"
-                      style={{
-                        border: `0.5px solid ${STAGE_COLORS[app.status]}40`,
-                        background: `${STAGE_COLORS[app.status]}0D`,
-                        color: STAGE_COLORS[app.status],
-                      }}
-                    >
-                      <span
-                        className="w-1.5 h-1.5 rounded-full"
-                        style={{ background: STAGE_COLORS[app.status] }}
-                      />
-                      {app.status.toLowerCase()}
-                    </span>
-                    <div className="hidden sm:flex gap-3">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setModal(app);
-                        }}
-                        className="mono text-xs px-2 py-1 transition-opacity hover:opacity-60"
-                        style={{ color: "var(--text-dim)" }}
-                      >
-                        edit
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(app.id);
-                        }}
-                        className="mono text-xs px-2 py-1 transition-opacity hover:opacity-60"
-                        style={{ color: "var(--red)" }}
-                      >
-                        del
-                      </button>
-                    </div>
-                  </div>
-                  {isExp && (
-                    <div
-                      className="px-4 sm:px-5 pb-4 pt-1 mb-2 rounded-b-lg space-y-4"
-                      style={{ background: "var(--bg-hover)" }}
-                    >
-                      {/* Linked resume */}
-                      {app.resume_id &&
-                        (() => {
-                          const linkedResume = resumes.find(
-                            (r) => r.id === app.resume_id,
-                          );
-                          if (!linkedResume) return null;
-                          return (
-                            <div
-                              className="pt-3"
-                              style={{ borderTop: "0.5px solid var(--border)" }}
-                            >
-                              <div
-                                className="mono text-xs uppercase tracking-widest mb-1.5"
-                                style={{ color: "var(--text-dim)" }}
-                              >
-                                resume
-                              </div>
-                              <button
-                                onClick={async (e) => {
-                                  e.stopPropagation();
-                                  const { data } = await supabase.storage
-                                    .from("resumes")
-                                    .createSignedUrl(
-                                      linkedResume.file_path,
-                                      60,
-                                    );
-                                  if (data)
-                                    window.open(data.signedUrl, "_blank");
-                                }}
-                                className="mono text-sm transition-opacity hover:opacity-70"
-                                style={{ color: "var(--accent)" }}
-                              >
-                                $ open {linkedResume.label.toLowerCase()} →
-                              </button>
-                            </div>
-                          );
-                        })()}
-                      {/* Basic performance fields */}
-                      {(app.oa_score || app.interview_outcome) && (
+                      <div>
                         <div
-                          className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-3"
-                          style={{ borderTop: "0.5px solid var(--border)" }}
+                          className="grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_auto_auto_auto] gap-4 sm:gap-6 items-center py-4 px-4 sm:px-5 rounded-lg cursor-pointer transition-colors"
+                          style={{
+                            background: isExp
+                              ? "var(--bg-hover)"
+                              : "transparent",
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isExp)
+                              e.currentTarget.style.background =
+                                "var(--bg-hover)";
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isExp)
+                              e.currentTarget.style.background = "transparent";
+                          }}
+                          onClick={() => setExpanded(isExp ? null : app.id)}
                         >
-                          {app.oa_score && (
-                            <div>
-                              <div
-                                className="mono text-xs uppercase tracking-widest mb-1.5"
-                                style={{ color: "var(--text-dim)" }}
-                              >
-                                oa score
-                              </div>
-                              <div
-                                className="mono text-sm"
-                                style={{ color: "var(--text)" }}
-                              >
-                                {app.oa_score}
-                              </div>
-                            </div>
-                          )}
-                          {app.interview_outcome && (
-                            <div>
-                              <div
-                                className="mono text-xs uppercase tracking-widest mb-1.5"
-                                style={{ color: "var(--text-dim)" }}
-                              >
-                                interview
-                              </div>
-                              <div
-                                className="mono text-sm"
-                                style={{ color: "var(--text)" }}
-                              >
-                                {app.interview_outcome}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* DSA Topics — collapsible list */}
-                      {app.dsa_topics && app.dsa_topics.length > 0 && (
-                        <div>
-                          <div
-                            className="mono text-xs uppercase tracking-widest mb-2"
-                            style={{ color: "var(--text-dim)" }}
-                          >
-                            dsa topics
-                          </div>
-                          <div className="space-y-1.5">
-                            {app.dsa_topics.map((item, i) => (
-                              <ExpandableItem
-                                key={i}
-                                label={item.topic}
-                                question={item.question}
-                                answer={item.approach}
-                                labelColor="#22C55E"
-                                qPrefix="Q"
-                                aPrefix="Approach"
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Behavioural — collapsible list */}
-                      {app.behavioural_questions &&
-                        app.behavioural_questions.length > 0 && (
-                          <div>
+                          <div className="min-w-0">
                             <div
-                              className="mono text-xs uppercase tracking-widest mb-2"
+                              className="text-base font-medium truncate"
+                              style={{ color: "var(--text)" }}
+                            >
+                              {app.company}
+                            </div>
+                            <div
+                              className="mono text-sm mt-1 truncate"
                               style={{ color: "var(--text-dim)" }}
                             >
-                              behavioural
+                              {app.role.toLowerCase().replace(/ /g, "-")}
+                              {app.source && ` → ${app.source.toLowerCase()}`}
                             </div>
-                            <div className="space-y-1.5">
-                              {app.behavioural_questions.map((bq, i) => (
-                                <ExpandableItem
-                                  key={i}
-                                  label={`Q${i + 1}`}
-                                  question={bq.question}
-                                  answer={bq.answer}
-                                  labelColor="#71717A"
-                                  qPrefix="Q"
-                                  aPrefix="A"
-                                />
-                              ))}
+                          </div>
+                          <div
+                            className="mono text-sm hidden sm:block"
+                            style={{ color: "var(--text-dim)" }}
+                            title={formatAbsoluteDate(app.date_applied)}
+                          >
+                            {formatRelativeDate(app.date_applied)}
+                          </div>
+                          <span
+                            className="inline-flex items-center gap-1.5 mono text-xs uppercase tracking-wider px-2.5 py-1.5 rounded"
+                            style={{
+                              border: `0.5px solid ${STAGE_COLORS[app.status]}40`,
+                              background: `${STAGE_COLORS[app.status]}0D`,
+                              color: STAGE_COLORS[app.status],
+                            }}
+                          >
+                            <span
+                              className="w-1.5 h-1.5 rounded-full"
+                              style={{ background: STAGE_COLORS[app.status] }}
+                            />
+                            {app.status.toLowerCase()}
+                          </span>
+                          <div className="hidden sm:flex gap-3">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setModal(app);
+                              }}
+                              className="mono text-xs px-2 py-1 transition-opacity hover:opacity-60"
+                              style={{ color: "var(--text-dim)" }}
+                            >
+                              edit
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(app.id);
+                              }}
+                              className="mono text-xs px-2 py-1 transition-opacity hover:opacity-60"
+                              style={{ color: "var(--red)" }}
+                            >
+                              del
+                            </button>
+                          </div>
+                        </div>
+                        {isExp && (
+                          <div
+                            className="px-4 sm:px-5 pb-4 pt-1 mb-2 rounded-b-lg space-y-4"
+                            style={{ background: "var(--bg-hover)" }}
+                          >
+                            {/* Linked resume */}
+                            {app.resume_id &&
+                              (() => {
+                                const linkedResume = resumes.find(
+                                  (r) => r.id === app.resume_id,
+                                );
+                                if (!linkedResume) return null;
+                                return (
+                                  <div
+                                    className="pt-3"
+                                    style={{
+                                      borderTop: "0.5px solid var(--border)",
+                                    }}
+                                  >
+                                    <div
+                                      className="mono text-xs uppercase tracking-widest mb-1.5"
+                                      style={{ color: "var(--text-dim)" }}
+                                    >
+                                      resume
+                                    </div>
+                                    <button
+                                      onClick={async (e) => {
+                                        e.stopPropagation();
+                                        const { data } = await supabase.storage
+                                          .from("resumes")
+                                          .createSignedUrl(
+                                            linkedResume.file_path,
+                                            60,
+                                          );
+                                        if (data)
+                                          window.open(data.signedUrl, "_blank");
+                                      }}
+                                      className="mono text-sm transition-opacity hover:opacity-70"
+                                      style={{ color: "var(--accent)" }}
+                                    >
+                                      $ open {linkedResume.label.toLowerCase()}{" "}
+                                      →
+                                    </button>
+                                  </div>
+                                );
+                              })()}
+                            {/* Basic performance fields */}
+                            {(app.oa_score || app.interview_outcome) && (
+                              <div
+                                className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-3"
+                                style={{
+                                  borderTop: "0.5px solid var(--border)",
+                                }}
+                              >
+                                {app.oa_score && (
+                                  <div>
+                                    <div
+                                      className="mono text-xs uppercase tracking-widest mb-1.5"
+                                      style={{ color: "var(--text-dim)" }}
+                                    >
+                                      oa score
+                                    </div>
+                                    <div
+                                      className="mono text-sm"
+                                      style={{ color: "var(--text)" }}
+                                    >
+                                      {app.oa_score}
+                                    </div>
+                                  </div>
+                                )}
+                                {app.interview_outcome && (
+                                  <div>
+                                    <div
+                                      className="mono text-xs uppercase tracking-widest mb-1.5"
+                                      style={{ color: "var(--text-dim)" }}
+                                    >
+                                      interview
+                                    </div>
+                                    <div
+                                      className="mono text-sm"
+                                      style={{ color: "var(--text)" }}
+                                    >
+                                      {app.interview_outcome}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* DSA Topics */}
+                            {app.dsa_topics && app.dsa_topics.length > 0 && (
+                              <div>
+                                <div
+                                  className="mono text-xs uppercase tracking-widest mb-2"
+                                  style={{ color: "var(--text-dim)" }}
+                                >
+                                  dsa topics
+                                </div>
+                                <div className="space-y-1.5">
+                                  {app.dsa_topics.map((item, i) => (
+                                    <ExpandableItem
+                                      key={i}
+                                      label={item.topic}
+                                      question={item.question}
+                                      answer={item.approach}
+                                      labelColor="#22C55E"
+                                      qPrefix="Q"
+                                      aPrefix="Approach"
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Behavioural */}
+                            {app.behavioural_questions &&
+                              app.behavioural_questions.length > 0 && (
+                                <div>
+                                  <div
+                                    className="mono text-xs uppercase tracking-widest mb-2"
+                                    style={{ color: "var(--text-dim)" }}
+                                  >
+                                    behavioural
+                                  </div>
+                                  <div className="space-y-1.5">
+                                    {app.behavioural_questions.map((bq, i) => (
+                                      <ExpandableItem
+                                        key={i}
+                                        label={`Q${i + 1}`}
+                                        question={bq.question}
+                                        answer={bq.answer}
+                                        labelColor="#71717A"
+                                        qPrefix="Q"
+                                        aPrefix="A"
+                                      />
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                            {/* Reflection */}
+                            {(app.mistakes || app.improvements) && (
+                              <div
+                                className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-3"
+                                style={{
+                                  borderTop: "0.5px solid var(--border)",
+                                }}
+                              >
+                                {app.mistakes && (
+                                  <div>
+                                    <div
+                                      className="mono text-xs uppercase tracking-widest mb-1.5"
+                                      style={{ color: "var(--red)" }}
+                                    >
+                                      mistakes
+                                    </div>
+                                    <div
+                                      className="text-sm"
+                                      style={{ color: "var(--text)" }}
+                                    >
+                                      {app.mistakes}
+                                    </div>
+                                  </div>
+                                )}
+                                {app.improvements && (
+                                  <div>
+                                    <div
+                                      className="mono text-xs uppercase tracking-widest mb-1.5"
+                                      style={{ color: "var(--accent)" }}
+                                    >
+                                      improve
+                                    </div>
+                                    <div
+                                      className="text-sm"
+                                      style={{ color: "var(--text)" }}
+                                    >
+                                      {app.improvements}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Mobile edit/delete */}
+                            <div className="flex gap-2 sm:hidden">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setModal(app);
+                                }}
+                                className="flex-1 mono text-sm py-2.5 rounded"
+                                style={{
+                                  border: "0.5px solid var(--border-strong)",
+                                  color: "var(--text)",
+                                }}
+                              >
+                                edit
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDelete(app.id);
+                                }}
+                                className="flex-1 mono text-sm py-2.5 rounded"
+                                style={{
+                                  border: "0.5px solid var(--border-strong)",
+                                  color: "var(--red)",
+                                }}
+                              >
+                                delete
+                              </button>
                             </div>
                           </div>
                         )}
-
-                      {/* Reflection */}
-                      {(app.mistakes || app.improvements) && (
-                        <div
-                          className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-3"
-                          style={{ borderTop: "0.5px solid var(--border)" }}
-                        >
-                          {app.mistakes && (
-                            <div>
-                              <div
-                                className="mono text-xs uppercase tracking-widest mb-1.5"
-                                style={{ color: "var(--red)" }}
-                              >
-                                mistakes
-                              </div>
-                              <div
-                                className="text-sm"
-                                style={{ color: "var(--text)" }}
-                              >
-                                {app.mistakes}
-                              </div>
-                            </div>
-                          )}
-                          {app.improvements && (
-                            <div>
-                              <div
-                                className="mono text-xs uppercase tracking-widest mb-1.5"
-                                style={{ color: "var(--accent)" }}
-                              >
-                                improve
-                              </div>
-                              <div
-                                className="text-sm"
-                                style={{ color: "var(--text)" }}
-                              >
-                                {app.improvements}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Mobile edit/delete */}
-                      <div className="flex gap-2 sm:hidden">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setModal(app);
-                          }}
-                          className="flex-1 mono text-sm py-2.5 rounded"
-                          style={{
-                            border: "0.5px solid var(--border-strong)",
-                            color: "var(--text)",
-                          }}
-                        >
-                          edit
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(app.id);
-                          }}
-                          className="flex-1 mono text-sm py-2.5 rounded"
-                          style={{
-                            border: "0.5px solid var(--border-strong)",
-                            color: "var(--red)",
-                          }}
-                        >
-                          delete
-                        </button>
                       </div>
-                    </div>
+                    </motion.div>
                   )}
-                </React.Fragment>
+                </AnimatePresence>
               );
             })}
           </div>

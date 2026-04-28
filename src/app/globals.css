@@ -6,6 +6,10 @@
     --font-mono: "IBM Plex Mono", monospace;
   }
 
+  html {
+    scrollbar-gutter: stable;
+  }
+
   html[data-theme="dark"],
   html:not([data-theme]) {
     --bg: #0a0a0a;
