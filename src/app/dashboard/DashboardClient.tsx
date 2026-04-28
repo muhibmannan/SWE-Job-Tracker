@@ -139,6 +139,7 @@ export default function DashboardClient({
   const [modal, setModal] = useState<Partial<Application> | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [loadingDemo, setLoadingDemo] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const supabase = createClient();
 
@@ -431,16 +432,71 @@ export default function DashboardClient({
 
         {/* Applications */}
         {filtered.length === 0 ? (
-          <div className="text-center py-24">
-            <p className="mono text-base" style={{ color: "var(--text-dim)" }}>
-              {apps.length === 0
-                ? '// no applications yet → hit "+ new" to start'
-                : query.trim()
-                  ? `// no matches for "${query}" → try a different term`
-                  : "// no matches in this stage"}
-            </p>
-          </div>
-        ) : (
+  <div className="text-center py-16">
+    {apps.length === 0 ? (
+      <div className="space-y-6">
+        <p className="mono text-base" style={{ color: "var(--text-dim)" }}>
+          {'// no applications yet → hit "+ new" to start'}
+        </p>
+        <div
+          className="flex items-center justify-center gap-3 mono text-xs"
+          style={{ color: "var(--text-muted)" }}
+        >
+          <div
+            className="h-[0.5px] w-12"
+            style={{ background: "var(--border)" }}
+          />
+          <span>or</span>
+          <div
+            className="h-[0.5px] w-12"
+            style={{ background: "var(--border)" }}
+          />
+        </div>
+        <button
+          onClick={async () => {
+            if (loadingDemo) return;
+            setLoadingDemo(true);
+            try {
+              const res = await fetch("/api/demo-load", { method: "POST" });
+              if (!res.ok) {
+                const data = await res.json();
+                alert(data.error ?? "Failed to load demo data");
+                setLoadingDemo(false);
+                return;
+              }
+              window.location.reload();
+            } catch {
+              alert("Network error — please try again");
+              setLoadingDemo(false);
+            }
+          }}
+          disabled={loadingDemo}
+          className="mono text-sm font-medium px-5 py-3 rounded-lg transition-all hover:opacity-90 active:scale-[0.98]"
+          style={{
+            background: "var(--accent)",
+            color: "#0A0A0A",
+            opacity: loadingDemo ? 0.5 : 1,
+            cursor: loadingDemo ? "not-allowed" : "pointer",
+          }}
+        >
+          {loadingDemo ? "$ loading..." : "$ load-demo-data"}
+        </button>
+        <p
+          className="mono text-xs mt-2"
+          style={{ color: "var(--text-muted)" }}
+        >
+          // populates 10 sample applications and 2 cv versions
+        </p>
+      </div>
+    ) : (
+      <p className="mono text-base" style={{ color: "var(--text-dim)" }}>
+        {query.trim()
+          ? `// no matches for "${query}" → try a different term`
+          : "// no matches in this stage"}
+      </p>
+    )}
+  </div>
+) : (
           <div className="flex flex-col gap-1">
             {filtered.map((app) => {
               const isExp = expanded === app.id;

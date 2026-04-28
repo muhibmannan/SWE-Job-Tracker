@@ -41,9 +41,12 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.variable} ${mono.variable} overflow-x-hidden`}>
-        {children}
-      </body>
+      <body
+  className={`${inter.variable} ${mono.variable} overflow-x-hidden`}
+  suppressHydrationWarning
+>
+  {children}
+</body>
     </html>
   );
 }
