@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import Navbar from "@/components/Navbar";
 import PipelineCard from "@/components/PipelineCard";
 import ApplicationModal from "@/components/ApplicationModal";
+import { formatRelativeDate, formatAbsoluteDate } from "@/lib/dateUtils";
 import AICoach from "@/components/AICoach";
 import MobileNav from "@/components/MobileNav";
 import { Resume } from "@/lib/types";
@@ -533,11 +534,12 @@ export default function DashboardClient({
                       </div>
                     </div>
                     <div
-                      className="mono text-sm hidden sm:block"
-                      style={{ color: "var(--text-dim)" }}
-                    >
-                      {app.date_applied ?? "—"}
-                    </div>
+  className="mono text-sm hidden sm:block"
+  style={{ color: "var(--text-dim)" }}
+  title={formatAbsoluteDate(app.date_applied)}
+>
+  {formatRelativeDate(app.date_applied)}
+</div>
                     <span
                       className="inline-flex items-center gap-1.5 mono text-xs uppercase tracking-wider px-2.5 py-1.5 rounded"
                       style={{

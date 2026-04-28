@@ -6,6 +6,7 @@ import { Resume } from "@/lib/types";
 import { createClient } from "@/lib/supabase/client";
 import Navbar from "@/components/Navbar";
 import MobileNav from "@/components/MobileNav";
+import { formatRelativeDate, formatAbsoluteDate } from "@/lib/dateUtils";
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 
@@ -14,14 +15,6 @@ function formatFileSize(bytes: number | null): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-AU", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
 }
 
 export default function ResumesClient({
@@ -355,12 +348,13 @@ export default function ResumesClient({
                     )}
                   </div>
                   <div
-                    className="mono text-sm mt-1 truncate"
-                    style={{ color: "var(--text-dim)" }}
-                  >
-                    {resume.filename} · {formatFileSize(resume.file_size)} ·{" "}
-                    {formatDate(resume.created_at)}
-                  </div>
+  className="mono text-sm mt-1 truncate"
+  style={{ color: "var(--text-dim)" }}
+  title={formatAbsoluteDate(resume.created_at)}
+>
+  {resume.filename} · {formatFileSize(resume.file_size)} · uploaded{" "}
+  {formatRelativeDate(resume.created_at)}
+</div>
                 </div>
                 <div className="flex gap-2 sm:gap-3">
                   <button
