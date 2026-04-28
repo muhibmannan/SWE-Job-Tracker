@@ -141,6 +141,7 @@ export default function DashboardClient({
   const [expanded, setExpanded] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [loadingDemo, setLoadingDemo] = useState(false);
+  const [showRejected, setShowRejected] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const supabase = createClient();
 
@@ -162,8 +163,14 @@ export default function DashboardClient({
   }, []);
 
   const filtered = useMemo(() => {
-    const byStatus =
+    // Apply status filter first
+    let byStatus =
       filter === "All" ? apps : apps.filter((a) => a.status === filter);
+
+    // Hide rejected by default in "All" view, unless toggled on or actively searching
+    if (filter === "All" && !showRejected && !query.trim()) {
+      byStatus = byStatus.filter((a) => a.status !== "Rejected");
+    }
 
     const q = query.trim().toLowerCase();
     if (!q) return byStatus;
@@ -193,7 +200,8 @@ export default function DashboardClient({
 
       return haystack.includes(q);
     });
-  }, [apps, filter, query]);
+  }, [apps, filter, query, showRejected]);
+
   const count = (s: AppStatus) => apps.filter((a) => a.status === s).length;
   const total = apps.length;
   const waiting = apps.filter((a) =>
@@ -433,71 +441,79 @@ export default function DashboardClient({
 
         {/* Applications */}
         {filtered.length === 0 ? (
-  <div className="text-center py-16">
-    {apps.length === 0 ? (
-      <div className="space-y-6">
-        <p className="mono text-base" style={{ color: "var(--text-dim)" }}>
-          {'// no applications yet → hit "+ new" to start'}
-        </p>
-        <div
-          className="flex items-center justify-center gap-3 mono text-xs"
-          style={{ color: "var(--text-muted)" }}
-        >
-          <div
-            className="h-[0.5px] w-12"
-            style={{ background: "var(--border)" }}
-          />
-          <span>or</span>
-          <div
-            className="h-[0.5px] w-12"
-            style={{ background: "var(--border)" }}
-          />
-        </div>
-        <button
-          onClick={async () => {
-            if (loadingDemo) return;
-            setLoadingDemo(true);
-            try {
-              const res = await fetch("/api/demo-load", { method: "POST" });
-              if (!res.ok) {
-                const data = await res.json();
-                alert(data.error ?? "Failed to load demo data");
-                setLoadingDemo(false);
-                return;
-              }
-              window.location.reload();
-            } catch {
-              alert("Network error — please try again");
-              setLoadingDemo(false);
-            }
-          }}
-          disabled={loadingDemo}
-          className="mono text-sm font-medium px-5 py-3 rounded-lg transition-all hover:opacity-90 active:scale-[0.98]"
-          style={{
-            background: "var(--accent)",
-            color: "#0A0A0A",
-            opacity: loadingDemo ? 0.5 : 1,
-            cursor: loadingDemo ? "not-allowed" : "pointer",
-          }}
-        >
-          {loadingDemo ? "$ loading..." : "$ load-demo-data"}
-        </button>
-        <p
-          className="mono text-xs mt-2"
-          style={{ color: "var(--text-muted)" }}
-        >
-          // populates 10 sample applications and 2 cv versions
-        </p>
-      </div>
-    ) : (
-      <p className="mono text-base" style={{ color: "var(--text-dim)" }}>
-        {query.trim()
-          ? `// no matches for "${query}" → try a different term`
-          : "// no matches in this stage"}
-      </p>
-    )}
-  </div>
-) : (
+          <div className="text-center py-16">
+            {apps.length === 0 ? (
+              <div className="space-y-6">
+                <p
+                  className="mono text-base"
+                  style={{ color: "var(--text-dim)" }}
+                >
+                  {'// no applications yet → hit "+ new" to start'}
+                </p>
+                <div
+                  className="flex items-center justify-center gap-3 mono text-xs"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  <div
+                    className="h-[0.5px] w-12"
+                    style={{ background: "var(--border)" }}
+                  />
+                  <span>or</span>
+                  <div
+                    className="h-[0.5px] w-12"
+                    style={{ background: "var(--border)" }}
+                  />
+                </div>
+                <button
+                  onClick={async () => {
+                    if (loadingDemo) return;
+                    setLoadingDemo(true);
+                    try {
+                      const res = await fetch("/api/demo-load", {
+                        method: "POST",
+                      });
+                      if (!res.ok) {
+                        const data = await res.json();
+                        alert(data.error ?? "Failed to load demo data");
+                        setLoadingDemo(false);
+                        return;
+                      }
+                      window.location.reload();
+                    } catch {
+                      alert("Network error — please try again");
+                      setLoadingDemo(false);
+                    }
+                  }}
+                  disabled={loadingDemo}
+                  className="mono text-sm font-medium px-5 py-3 rounded-lg transition-all hover:opacity-90 active:scale-[0.98]"
+                  style={{
+                    background: "var(--accent)",
+                    color: "#0A0A0A",
+                    opacity: loadingDemo ? 0.5 : 1,
+                    cursor: loadingDemo ? "not-allowed" : "pointer",
+                  }}
+                >
+                  {loadingDemo ? "$ loading..." : "$ load-demo-data"}
+                </button>
+                <p
+                  className="mono text-xs mt-2"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  // populates 10 sample applications and 2 cv versions
+                </p>
+              </div>
+            ) : (
+              <p
+                className="mono text-base"
+                style={{ color: "var(--text-dim)" }}
+              >
+                {query.trim()
+                  ? `// no matches for "${query}" → try a different term`
+                  : "// no matches in this stage"}
+              </p>
+            )}
+          </div>
+        ) : (
           <div className="flex flex-col gap-1">
             {filtered.map((app) => {
               const isExp = expanded === app.id;
@@ -534,12 +550,12 @@ export default function DashboardClient({
                       </div>
                     </div>
                     <div
-  className="mono text-sm hidden sm:block"
-  style={{ color: "var(--text-dim)" }}
-  title={formatAbsoluteDate(app.date_applied)}
->
-  {formatRelativeDate(app.date_applied)}
-</div>
+                      className="mono text-sm hidden sm:block"
+                      style={{ color: "var(--text-dim)" }}
+                      title={formatAbsoluteDate(app.date_applied)}
+                    >
+                      {formatRelativeDate(app.date_applied)}
+                    </div>
                     <span
                       className="inline-flex items-center gap-1.5 mono text-xs uppercase tracking-wider px-2.5 py-1.5 rounded"
                       style={{
@@ -789,6 +805,27 @@ export default function DashboardClient({
             })}
           </div>
         )}
+
+        {/* Show/hide rejected toggle — only on All view, not searching, when rejected exist */}
+        {filter === "All" &&
+          !query.trim() &&
+          apps.some((a) => a.status === "Rejected") && (
+            <div className="flex justify-center mt-8">
+              <button
+                onClick={() => setShowRejected((v) => !v)}
+                className="mono text-sm px-5 py-2.5 rounded-lg transition-colors hover:opacity-70"
+                style={{
+                  border: "0.5px solid var(--border-strong)",
+                  color: showRejected ? "var(--text)" : "var(--text-dim)",
+                  background: showRejected ? "var(--bg-hover)" : "transparent",
+                }}
+              >
+                {showRejected
+                  ? `✓ showing ${apps.filter((a) => a.status === "Rejected").length} rejected`
+                  : `show ${apps.filter((a) => a.status === "Rejected").length} rejected`}
+              </button>
+            </div>
+          )}
       </main>
 
       {modal !== null && (
