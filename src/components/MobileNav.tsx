@@ -8,6 +8,7 @@ export default function MobileNav() {
 
   const nav = [
     { href: "/dashboard", label: "~/pipeline" },
+    { href: "/browse", label: "~/browse" },
     { href: "/resumes", label: "~/resumes" },
     { href: "/analytics", label: "~/analytics" },
   ];

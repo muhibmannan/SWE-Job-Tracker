@@ -348,13 +348,13 @@ export default function ResumesClient({
                     )}
                   </div>
                   <div
-  className="mono text-sm mt-1 truncate"
-  style={{ color: "var(--text-dim)" }}
-  title={formatAbsoluteDate(resume.created_at)}
->
-  {resume.filename} · {formatFileSize(resume.file_size)} · uploaded{" "}
-  {formatRelativeDate(resume.created_at)}
-</div>
+                    className="mono text-sm mt-1 truncate"
+                    style={{ color: "var(--text-dim)" }}
+                    title={formatAbsoluteDate(resume.created_at)}
+                  >
+                    {resume.filename} · {formatFileSize(resume.file_size)} ·
+                    uploaded {formatRelativeDate(resume.created_at)}
+                  </div>
                 </div>
                 <div className="flex gap-2 sm:gap-3">
                   <button

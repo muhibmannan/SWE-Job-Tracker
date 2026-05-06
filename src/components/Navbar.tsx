@@ -23,6 +23,7 @@ export default function Navbar({
 
   const nav = [
     { href: "/dashboard", label: "~/pipeline" },
+    { href: "/browse", label: "~/browse" },
     { href: "/resumes", label: "~/resumes" },
     { href: "/analytics", label: "~/analytics" },
   ];
