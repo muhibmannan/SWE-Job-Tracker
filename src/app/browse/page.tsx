@@ -1,31 +1,111 @@
-import Link from "next/link";
-import { fetchScrapedJobs } from "@/lib/jobs";
+import {
+  fetchScrapedJobs,
+  fetchScrapedStats,
+  daysUntilClosing,
+} from "@/lib/jobs";
 import type { ScrapedJob } from "@/lib/types";
+import BrowseFilters from "./BrowseFilters";
+import JobRow from "./JobRow";
 
 export const metadata = {
   title: "~/browse · jobtracker.sh",
+  description:
+    "Browse graduate & internship SWE roles in Sydney, sourced from gradconnection.",
 };
 
 export const revalidate = 300;
 
-// Map source identifier → display label + color (uses CSS vars from globals.css)
-const SOURCE_STYLE: Record<string, { label: string; color: string }> = {
-  "gradconnection-graduate": { label: "graduate", color: "var(--blue)" },
-  "gradconnection-internship": { label: "internship", color: "var(--purple)" },
+const PAGE_SIZE = 25;
+
+type SortMode = "soon" | "new" | "latest";
+
+type SearchParams = {
+  category?: string;
+  company?: string;
+  sort?: string;
+  page?: string;
 };
 
-function sourceStyle(source: string) {
-  return SOURCE_STYLE[source] ?? { label: source, color: "var(--text-dim)" };
+function parseCategory(
+  value: string | undefined,
+): "graduate" | "internship" | undefined {
+  if (value === "graduate" || value === "internship") return value;
+  return undefined;
 }
 
-export default async function BrowsePage() {
-  let jobs: ScrapedJob[] = [];
+function parseSort(value: string | undefined): SortMode {
+  if (value === "new" || value === "latest") return value;
+  return "soon";
+}
+
+function parsePage(value: string | undefined): number {
+  const n = parseInt(value ?? "1", 10);
+  return Number.isFinite(n) && n >= 1 ? n : 1;
+}
+
+function sortJobs(jobs: ScrapedJob[], mode: SortMode): ScrapedJob[] {
+  const copy = [...jobs];
+  switch (mode) {
+    case "soon":
+      return copy.sort(
+        (a, b) =>
+          daysUntilClosing(a.posted_date) - daysUntilClosing(b.posted_date),
+      );
+    case "new":
+      return copy.sort((a, b) => {
+        const aNew = a.posted_date.toLowerCase().includes("new") ? 0 : 1;
+        const bNew = b.posted_date.toLowerCase().includes("new") ? 0 : 1;
+        if (aNew !== bNew) return aNew - bNew;
+        return b.scraped_at.localeCompare(a.scraped_at);
+      });
+    case "latest":
+      return copy.sort((a, b) => b.scraped_at.localeCompare(a.scraped_at));
+  }
+}
+
+export default async function BrowsePage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const params = await searchParams;
+  const category = parseCategory(params.category);
+  const company = params.company?.trim() || undefined;
+  const sort = parseSort(params.sort);
+  const page = parsePage(params.page);
+
+  let allJobs: ScrapedJob[] = [];
+  let totalGraduate = 0;
+  let totalInternship = 0;
   let errorMessage: string | null = null;
 
   try {
-    jobs = await fetchScrapedJobs({ limit: 50 });
+    const [jobs, stats] = await Promise.all([
+      fetchScrapedJobs({ category, company, limit: 200 }),
+      fetchScrapedStats(),
+    ]);
+    allJobs = sortJobs(jobs, sort);
+    totalGraduate = stats.by_source["gradconnection-graduate"] ?? 0;
+    totalInternship = stats.by_source["gradconnection-internship"] ?? 0;
   } catch (err) {
     errorMessage = err instanceof Error ? err.message : "Unknown error";
+  }
+
+  const totalMatched = allJobs.length;
+  const endIdx = page * PAGE_SIZE;
+  const pageJobs = allJobs.slice(0, endIdx);
+  const hasMore = endIdx < totalMatched;
+
+  const baseParams = new URLSearchParams();
+  if (category) baseParams.set("category", category);
+  if (company) baseParams.set("company", company);
+  if (sort !== "soon") baseParams.set("sort", sort);
+
+  function urlForPage(nextPage: number): string {
+    const p = new URLSearchParams(baseParams);
+    if (nextPage > 1) p.set("page", String(nextPage));
+    const q = p.toString();
+    return q ? `/browse?${q}` : "/browse";
   }
 
   return (
@@ -38,9 +118,19 @@ export default async function BrowsePage() {
           ~/browse
         </h1>
         <p className="mono text-sm mt-2" style={{ color: "var(--text-dim)" }}>
-          // graduate &amp; internship roles, scraped from gradconnection
+          // graduate &amp; internship roles, sourced from gradconnection
+        </p>
+        <p className="mono text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+          // total:{" "}
+          <span style={{ color: "var(--blue)" }}>{totalGraduate} graduate</span>
+          {" · "}
+          <span style={{ color: "var(--purple)" }}>
+            {totalInternship} internship
+          </span>
         </p>
       </header>
+
+      <BrowseFilters category={category} company={company ?? ""} sort={sort} />
 
       {errorMessage ? (
         <div
@@ -50,89 +140,48 @@ export default async function BrowsePage() {
           // failed to load jobs:{" "}
           <code style={{ color: "var(--red)" }}>{errorMessage}</code>
         </div>
+      ) : pageJobs.length === 0 ? (
+        <div
+          className="mono text-sm py-12 text-center"
+          style={{ color: "var(--text-dim)" }}
+        >
+          // no jobs match the current filters
+        </div>
       ) : (
         <>
           <div
             className="mono text-xs uppercase tracking-wider mb-4 px-4 sm:px-5"
             style={{ color: "var(--text-dim)" }}
           >
-            // {jobs.length} {jobs.length === 1 ? "job" : "jobs"} found
+            // showing {pageJobs.length} of {totalMatched}{" "}
+            {totalMatched === 1 ? "job" : "jobs"}
           </div>
 
           <ul className="space-y-1">
-            {jobs.map((job) => (
+            {pageJobs.map((job) => (
               <li key={job.id}>
                 <JobRow job={job} />
               </li>
             ))}
           </ul>
+
+          {hasMore && (
+            <div className="flex justify-center mt-8">
+              <a
+                href={urlForPage(page + 1)}
+                className="mono text-xs uppercase tracking-wider px-4 py-2 rounded transition-opacity hover:opacity-70"
+                style={{
+                  border: "0.5px solid var(--border-strong)",
+                  color: "var(--accent)",
+                  background: "var(--accent-bg)",
+                }}
+              >
+                $ load more → $ load more →
+              </a>
+            </div>
+          )}
         </>
       )}
     </main>
-  );
-}
-
-function JobRow({ job }: { job: ScrapedJob }) {
-  const style = sourceStyle(job.source);
-  const slug = job.title
-    .toLowerCase()
-    .replace(/[^\w]+/g, "-")
-    .replace(/^-|-$/g, "");
-
-  return (
-    <Link
-      href={job.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_auto_auto_auto] gap-4 sm:gap-6 items-center py-4 px-4 sm:px-5 rounded-lg transition-colors hover:bg-[var(--bg-hover)]"
-    >
-      <div className="min-w-0">
-        <div
-          className="text-base font-medium truncate"
-          style={{ color: "var(--text)" }}
-        >
-          {job.title}
-        </div>
-        <div
-          className="mono text-sm mt-1 truncate"
-          style={{ color: "var(--text-dim)" }}
-        >
-          {job.company.toLowerCase()}
-          {job.location && ` → ${job.location.toLowerCase()}`}
-        </div>
-      </div>
-
-      <div
-        className="mono text-sm hidden sm:block whitespace-nowrap"
-        style={{ color: "var(--text-dim)" }}
-        title={job.posted_date}
-      >
-        {job.posted_date.toLowerCase()}
-      </div>
-
-      <span
-        className="inline-flex items-center gap-1.5 mono text-xs uppercase tracking-wider px-2.5 py-1.5 rounded whitespace-nowrap"
-        style={{
-          border: `0.5px solid ${style.color}40`,
-          background: `${style.color}0D`,
-          color: style.color,
-        }}
-      >
-        <span
-          className="w-1.5 h-1.5 rounded-full"
-          style={{ background: style.color }}
-        />
-        {style.label}
-      </span>
-
-      <div className="hidden sm:flex gap-3">
-        <span
-          className="mono text-xs px-2 py-1"
-          style={{ color: "var(--accent)" }}
-        >
-          apply →
-        </span>
-      </div>
-    </Link>
   );
 }

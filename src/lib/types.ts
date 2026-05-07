@@ -32,6 +32,18 @@ export interface Application {
   updated_at: string;
 }
 
+export interface ScrapedJob {
+     id: number;
+     title: string;
+     company: string;
+     location: string | null;
+     url: string;
+     description: string;
+     posted_date: string;
+     source: string;
+     scraped_at: string; // ISO-8601 UTC
+   }
+
 export type Resume = {
   id: string;
   user_id: string;
