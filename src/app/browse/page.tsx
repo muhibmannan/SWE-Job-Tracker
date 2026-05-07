@@ -176,7 +176,7 @@ export default async function BrowsePage({
                   background: "var(--accent-bg)",
                 }}
               >
-                $ load more → $ load more →
+                $ load more →
               </a>
             </div>
           )}
