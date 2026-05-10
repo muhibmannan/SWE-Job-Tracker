@@ -35,6 +35,14 @@ The main dashboard — hero stats, pipeline filter tabs, search bar with `⌘K` 
 
 ![Pipeline with expanded card](./screenshots/dashboard-desktop.png)
 
+### Browse jobs (desktop)
+
+A live feed of Sydney SWE graduate roles and internships, sourced from GradConnection by my [job-scraper](https://github.com/muhibmannan/job-scraper) service every 30 minutes. Sortable by closing date, filterable by category and company, with each row linking out to the original listing.
+
+The data lives in Supabase Postgres, exposed via a FastAPI service deployed on Fly.io, and rendered here as a server-side Next.js page with `revalidate: 300` so it stays fresh without hammering the backend.
+
+![Browse jobs page](./screenshots/browse-desktop.png)
+
 ### Analytics
 
 Conversion rates, pipeline funnel, source breakdown, and weekly application velocity.
