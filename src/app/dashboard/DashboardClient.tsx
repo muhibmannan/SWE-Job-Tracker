@@ -116,8 +116,17 @@ function ExpandableItem({
   );
 }
 
-const STAGES: AppStatus[] = ["Applied", "OA", "Interview", "Offer", "Rejected"];
+const STAGES: AppStatus[] = [
+  "Saved",
+  "Applied",
+  "OA",
+  "Interview",
+  "Offer",
+  "Rejected",
+];
+
 const STAGE_COLORS: Record<AppStatus, string> = {
+  Saved: "var(--text-dim)",
   Applied: "var(--blue)",
   OA: "var(--amber)",
   Interview: "var(--green)",
@@ -200,22 +209,25 @@ export default function DashboardClient({
 
   const count = (s: AppStatus) => apps.filter((a) => a.status === s).length;
   const total = apps.length;
+  // Saved jobs aren't applications yet — they're queued via /browse.
+  // Funnel rates are calculated against `applied` (everything except Saved).
+  const applied = apps.filter((a) => a.status !== "Saved").length;
   const waiting = apps.filter((a) =>
     ["Applied", "OA", "Interview"].includes(a.status),
   ).length;
   const responseRate =
-    total > 0
+    applied > 0
       ? Math.round(
           (apps.filter((a) => ["OA", "Interview", "Offer"].includes(a.status))
             .length /
-            total) *
+            applied) *
             100,
         )
       : 0;
   const offerRate =
-    total > 0
+    applied > 0
       ? Math.round(
-          (apps.filter((a) => a.status === "Offer").length / total) * 100,
+          (apps.filter((a) => a.status === "Offer").length / applied) * 100,
         )
       : 0;
 
@@ -273,7 +285,7 @@ export default function DashboardClient({
               className="mono text-sm mt-3"
               style={{ color: "var(--text-dim)" }}
             >
-              // {waiting} awaiting response
+              // {applied} applied · {waiting} awaiting response
             </p>
           </div>
 

@@ -4,6 +4,7 @@ import { AppStatus } from "@/lib/types";
 
 const COLORS: Record<AppStatus | "All", string> = {
   All: "var(--text)",
+  Saved: "var(--text-dim)",
   Applied: "var(--blue)",
   OA: "var(--amber)",
   Interview: "var(--green)",

@@ -6,7 +6,15 @@ import DSATopicsInput from "./DSATopicsInput";
 import BehaviouralQuestionsInput from "./BehaviouralQuestionsInput";
 import { Resume } from "@/lib/types";
 
-const STAGES: AppStatus[] = ["Applied", "OA", "Interview", "Offer", "Rejected"];
+const STAGES: AppStatus[] = [
+  "Saved",
+  "Applied",
+  "OA",
+  "Interview",
+  "Offer",
+  "Rejected",
+];
+
 const SOURCES = [
   "Seek",
   "LinkedIn",
@@ -18,6 +26,7 @@ const SOURCES = [
 ];
 
 const STAGE_COLORS: Record<AppStatus, string> = {
+  Saved: "var(--text-dim)",
   Applied: "var(--blue)",
   OA: "var(--amber)",
   Interview: "var(--green)",

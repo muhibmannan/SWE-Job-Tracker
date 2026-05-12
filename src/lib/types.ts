@@ -1,4 +1,4 @@
-export type AppStatus = "Applied" | "OA" | "Interview" | "Offer" | "Rejected";
+export type AppStatus = "Saved" | "Applied" | "OA" | "Interview" | "Offer" | "Rejected";
 
 export interface BehaviouralQuestion {
   question: string;

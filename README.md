@@ -233,10 +233,10 @@ Downloads use `createSignedUrl` with a 60-second expiry so URLs can't be shared 
 - [x] Analytics dashboard
 - [x] Resume library with file uploads
 - [x] Light/dark theme toggle
+- [x] Export applications as CSV/JSON
 - [ ] Custom domain (`muhib-jobtracker.is-a.dev`) — PR pending
 - [ ] Email digest of weekly stats
 - [ ] Interview prep mode — daily DSA practice surfaced from past interviews
-- [ ] Export applications as CSV/JSON
 
 ---
 

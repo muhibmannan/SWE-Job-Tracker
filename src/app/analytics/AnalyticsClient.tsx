@@ -29,7 +29,10 @@ export default function AnalyticsClient({
   firstName: string | null;
 }) {
   const total = applications.length;
-
+  // Saved jobs aren't applications yet — they're queued via /browse.
+  // Funnel rates and the funnel chart are calculated against `applied`
+  // (everything except Saved).
+  const applied = applications.filter((a) => a.status !== "Saved").length;
   // Pipeline funnel — cumulative progression
   const reachedOA = applications.filter((a) =>
     ["OA", "Interview", "Offer"].includes(a.status),
@@ -41,7 +44,7 @@ export default function AnalyticsClient({
   const rejected = applications.filter((a) => a.status === "Rejected").length;
 
   const funnelData = [
-    { stage: "applied", count: total, fill: "var(--blue)" },
+    { stage: "applied", count: applied, fill: "var(--blue)" },
     { stage: "oa", count: reachedOA, fill: "var(--amber)" },
     { stage: "interview", count: reachedInterview, fill: "var(--green)" },
     { stage: "offer", count: reachedOffer, fill: "var(--purple)" },
@@ -76,11 +79,13 @@ export default function AnalyticsClient({
     .map(([week, count]) => ({ week, count }));
 
   // Rates
-  const responseRate = total > 0 ? Math.round((reachedOA / total) * 100) : 0;
+  const responseRate =
+    applied > 0 ? Math.round((reachedOA / applied) * 100) : 0;
   const interviewRate =
-    total > 0 ? Math.round((reachedInterview / total) * 100) : 0;
-  const offerRate = total > 0 ? Math.round((reachedOffer / total) * 100) : 0;
-  const rejectRate = total > 0 ? Math.round((rejected / total) * 100) : 0;
+    applied > 0 ? Math.round((reachedInterview / applied) * 100) : 0;
+  const offerRate =
+    applied > 0 ? Math.round((reachedOffer / applied) * 100) : 0;
+  const rejectRate = applied > 0 ? Math.round((rejected / applied) * 100) : 0;
 
   // Weeks span for subtitle
   const weeksSpan = volumeData.length;

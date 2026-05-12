@@ -4,6 +4,7 @@ import {
   daysUntilClosing,
 } from "@/lib/jobs";
 import type { ScrapedJob } from "@/lib/types";
+import { createClient } from "@/lib/supabase/server";
 import BrowseFilters from "./BrowseFilters";
 import JobRow from "./JobRow";
 
@@ -43,6 +44,12 @@ function parsePage(value: string | undefined): number {
   return Number.isFinite(n) && n >= 1 ? n : 1;
 }
 
+// Build a stable key for matching a scraped job against a saved application.
+// Lowercased to absorb whitespace/case noise from re-scraped listings.
+function jobKey(role: string, company: string): string {
+  return `${role.toLowerCase().trim()}|${company.toLowerCase().trim()}`;
+}
+
 function sortJobs(jobs: ScrapedJob[], mode: SortMode): ScrapedJob[] {
   const copy = [...jobs];
   switch (mode) {
@@ -73,6 +80,25 @@ export default async function BrowsePage({
   const company = params.company?.trim() || undefined;
   const sort = parseSort(params.sort);
   const page = parsePage(params.page);
+
+  // Auth + already-saved lookup. /browse is public; we only fetch saved-state
+  // when the user is logged in. Saved jobs are matched by (role, company)
+  // lowercased — same job pulled fresh on a later scrape may have small
+  // whitespace/case differences in title.
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let savedJobKeys = new Set<string>();
+  if (user) {
+    const { data: apps } = await supabase
+      .from("applications")
+      .select("role, company")
+      .eq("user_id", user.id);
+
+    savedJobKeys = new Set((apps ?? []).map((a) => jobKey(a.role, a.company)));
+  }
 
   let allJobs: ScrapedJob[] = [];
   let totalGraduate = 0;
@@ -160,7 +186,11 @@ export default async function BrowsePage({
           <ul className="space-y-1">
             {pageJobs.map((job) => (
               <li key={job.id}>
-                <JobRow job={job} />
+                <JobRow
+                  job={job}
+                  userId={user?.id ?? null}
+                  isSaved={savedJobKeys.has(jobKey(job.title, job.company))}
+                />
               </li>
             ))}
           </ul>

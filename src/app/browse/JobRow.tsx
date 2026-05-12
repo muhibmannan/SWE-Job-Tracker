@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ScrapedJob } from "@/lib/types";
+import SaveButton from "./SaveButton";
 
 const SOURCE_STYLE: Record<string, { label: string; color: string }> = {
   "gradconnection-graduate": { label: "graduate", color: "var(--blue)" },
@@ -10,17 +11,23 @@ function sourceStyle(source: string) {
   return SOURCE_STYLE[source] ?? { label: source, color: "var(--text-dim)" };
 }
 
-export default function JobRow({ job }: { job: ScrapedJob }) {
+interface Props {
+  job: ScrapedJob;
+  userId: string | null;
+  isSaved: boolean;
+}
+
+export default function JobRow({ job, userId, isSaved }: Props) {
   const style = sourceStyle(job.source);
 
   return (
-    <Link
-      href={job.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_auto_auto_auto] gap-4 sm:gap-6 items-center py-4 px-4 sm:px-5 rounded-lg transition-colors hover:bg-[var(--bg-hover)]"
-    >
-      <div className="min-w-0">
+    <div className="grid grid-cols-[1fr_auto_auto] sm:grid-cols-[1fr_auto_auto_auto_auto] gap-2 sm:gap-6 items-center py-4 px-4 sm:px-5 rounded-lg transition-colors hover:bg-[var(--bg-hover)]">
+      <Link
+        href={job.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="min-w-0 block"
+      >
         <div
           className="text-base font-medium truncate"
           style={{ color: "var(--text)" }}
@@ -34,16 +41,15 @@ export default function JobRow({ job }: { job: ScrapedJob }) {
           {job.company.toLowerCase()}
           {job.location && ` → ${job.location.toLowerCase()}`}
         </div>
-        {/* Mobile-only date row */}
         <div
           className="mono text-xs mt-1 sm:hidden"
           style={{ color: "var(--text-dim)" }}
         >
           {job.posted_date.toLowerCase()}
         </div>
-      </div>
+      </Link>
 
-      {/* Desktop date column */}
+      {/* Desktop-only: posted date column */}
       <div
         className="mono text-sm hidden sm:block whitespace-nowrap"
         style={{ color: "var(--text-dim)" }}
@@ -52,6 +58,7 @@ export default function JobRow({ job }: { job: ScrapedJob }) {
         {job.posted_date.toLowerCase()}
       </div>
 
+      {/* Source badge */}
       <span
         className="inline-flex items-center gap-1.5 mono text-xs uppercase tracking-wider px-2.5 py-1.5 rounded whitespace-nowrap"
         style={{
@@ -67,14 +74,28 @@ export default function JobRow({ job }: { job: ScrapedJob }) {
         {style.label}
       </span>
 
-      <div className="hidden sm:flex gap-3">
-        <span
-          className="mono text-xs px-2 py-1"
+      {/* Save button — visible on all sizes */}
+      <div className="flex">
+        <SaveButton
+          jobTitle={job.title}
+          jobCompany={job.company}
+          userId={userId}
+          initialIsSaved={isSaved}
+        />
+      </div>
+
+      {/* Apply link */}
+      <div className="hidden sm:flex">
+        <Link
+          href={job.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mono text-xs px-2 py-1 whitespace-nowrap transition-opacity hover:opacity-70"
           style={{ color: "var(--accent)" }}
         >
           apply →
-        </span>
+        </Link>
       </div>
-    </Link>
+    </div>
   );
 }
