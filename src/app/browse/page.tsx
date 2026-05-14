@@ -54,10 +54,7 @@ function sortJobs(jobs: ScrapedJob[], mode: SortMode): ScrapedJob[] {
   const copy = [...jobs];
   switch (mode) {
     case "soon":
-      return copy.sort(
-        (a, b) =>
-          daysUntilClosing(a.posted_date) - daysUntilClosing(b.posted_date),
-      );
+      return copy.sort((a, b) => daysUntilClosing(a) - daysUntilClosing(b));
     case "new":
       return copy.sort((a, b) => {
         const aNew = a.posted_date.toLowerCase().includes("new") ? 0 : 1;

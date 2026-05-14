@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ScrapedJob } from "@/lib/types";
 import SaveButton from "./SaveButton";
+import { formatClosingText } from "@/lib/jobs";
 
 const SOURCE_STYLE: Record<string, { label: string; color: string }> = {
   "gradconnection-graduate": { label: "graduate", color: "var(--blue)" },
@@ -45,7 +46,7 @@ export default function JobRow({ job, userId, isSaved }: Props) {
           className="mono text-xs mt-1 sm:hidden"
           style={{ color: "var(--text-dim)" }}
         >
-          {job.posted_date.toLowerCase()}
+          {formatClosingText(job)}
         </div>
       </Link>
 
@@ -53,9 +54,9 @@ export default function JobRow({ job, userId, isSaved }: Props) {
       <div
         className="mono text-sm hidden sm:block whitespace-nowrap"
         style={{ color: "var(--text-dim)" }}
-        title={job.posted_date}
+        title={`Raw: ${job.posted_date} | Closes: ${job.closing_at ?? "unknown"}`}
       >
-        {job.posted_date.toLowerCase()}
+        {formatClosingText(job)}
       </div>
 
       {/* Source badge */}

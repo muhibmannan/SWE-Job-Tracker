@@ -40,6 +40,7 @@ export interface ScrapedJob {
      url: string;
      description: string;
      posted_date: string;
+     closing_at: string | null; // ISO-8601 UTC, NULL when posted_date is unparseable (e.g., "New!")
      source: string;
      scraped_at: string; // ISO-8601 UTC
    }

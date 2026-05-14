@@ -47,46 +47,60 @@ export async function fetchScrapedStats(): Promise<ScrapedStats> {
   return res.json();
 }
 
-/**
- * Estimate days until a job closes from GradConnection's fuzzy posted_date string.
- * Returns Number.POSITIVE_INFINITY for "New!" or unparseable strings (treated as "no rush").
- * Returns 0 for already-closed or "Closing in N hours".
- *
- * Examples:
- *   "Closing in 4 hours"   → 0
- *   "Closing in 13 days"   → 13
- *   "Closing in a month"   → 30
- *   "Closing in 2 months"  → 60
- *   "Closing in a year"    → 365
- *   "New!"                 → Infinity
- */
-export function daysUntilClosing(postedDate: string): number {
-  const s = postedDate.toLowerCase().trim();
 
-  // Just-posted listings: no closing info, push to bottom of "soon" sort
+export function daysUntilClosing(job: ScrapedJob): number {
+  if (job.closing_at) {
+    const closingMs = new Date(job.closing_at).getTime();
+    const nowMs = Date.now();
+    const days = (closingMs - nowMs) / (1000 * 60 * 60 * 24);
+    return Math.ceil(days);
+  }
+
+  // Fallback: parse `posted_date` text (kept for graceful degradation).
+  const s = job.posted_date.toLowerCase().trim();
   if (!s.startsWith("closing")) return Number.POSITIVE_INFINITY;
-
-  // Hours → 0 (treat as "today")
   if (s.includes("hour")) return 0;
 
-  // Match "in N days" or "in a day"
   const dayMatch = s.match(/in (\d+|a|an) days?/);
-  if (dayMatch) return dayMatch[1] === "a" || dayMatch[1] === "an" ? 1 : parseInt(dayMatch[1], 10);
+  if (dayMatch) return dayMatch[1].match(/^an?$/) ? 1 : parseInt(dayMatch[1], 10);
 
-  // "in N months" or "in a month"
   const monthMatch = s.match(/in (\d+|a|an) months?/);
   if (monthMatch) {
-    const n = monthMatch[1] === "a" || monthMatch[1] === "an" ? 1 : parseInt(monthMatch[1], 10);
+    const n = monthMatch[1].match(/^an?$/) ? 1 : parseInt(monthMatch[1], 10);
     return n * 30;
   }
 
-  // "in N years" or "in a year"
   const yearMatch = s.match(/in (\d+|a|an) years?/);
   if (yearMatch) {
-    const n = yearMatch[1] === "a" || yearMatch[1] === "an" ? 1 : parseInt(yearMatch[1], 10);
+    const n = yearMatch[1].match(/^an?$/) ? 1 : parseInt(yearMatch[1], 10);
     return n * 365;
   }
 
-  // Unrecognised — push to bottom
   return Number.POSITIVE_INFINITY;
+}
+
+export function formatClosingText(job: ScrapedJob): string {
+  if (!job.closing_at) {
+    return job.posted_date.toLowerCase() || "new";
+  }
+
+  const closingMs = new Date(job.closing_at).getTime();
+  const nowMs = Date.now();
+  const diffMs = closingMs - nowMs;
+
+  if (diffMs < 0) return "closed";
+
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+  if (hours < 24) {
+    return hours <= 1 ? "closing today" : `closing in ${hours} hours`;
+  }
+
+  const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  if (days < 14) return days === 1 ? "closing in 1 day" : `closing in ${days} days`;
+
+  const weeks = Math.round(days / 7);
+  if (weeks < 8) return `closing in ${weeks} weeks`;
+
+  const months = Math.round(days / 30);
+  return `closing in ${months} months`;
 }
